@@ -165,6 +165,8 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
                   </button>
                   <input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={set.weight}
                     onChange={(e) =>
                       updateSet(exerciseIndex, setIndex, {
@@ -176,6 +178,8 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
                   />
                   <input
                     type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={set.reps}
                     onChange={(e) =>
                       updateSet(exerciseIndex, setIndex, {

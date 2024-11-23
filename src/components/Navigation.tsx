@@ -12,14 +12,14 @@ export function Navigation() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-      <div className="max-w-md mx-auto px-4">
-        <div className="flex justify-between">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 overflow-x-auto">
+      <div className="min-w-full px-4">
+        <div className="flex whitespace-nowrap">
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`p-4 flex flex-col items-center ${
+              className={`p-4 flex-shrink-0 flex flex-col items-center ${
                 location.pathname === item.path
                   ? "text-blue-500"
                   : "text-gray-500"
