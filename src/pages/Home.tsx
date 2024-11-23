@@ -1,0 +1,101 @@
+import { Link } from "react-router-dom";
+import { Workout } from "../types/workout";
+import { format } from "date-fns";
+import { useState } from "react";
+
+export function Home() {
+  const [workoutHistory, setWorkoutHistory] = useState<Workout[]>(() =>
+    JSON.parse(localStorage.getItem("workoutHistory") || "[]")
+  );
+  const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(
+    null
+  );
+
+  const recentWorkouts = workoutHistory
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
+
+  const deleteWorkout = (workoutId: string) => {
+    const updatedWorkouts = workoutHistory.filter((w) => w.id !== workoutId);
+    setWorkoutHistory(updatedWorkouts);
+    localStorage.setItem("workoutHistory", JSON.stringify(updatedWorkouts));
+    setShowConfirmDelete(null);
+  };
+
+  return (
+    <div className="p-4 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Workout Tracker</h1>
+        <Link
+          to="/workout"
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+        >
+          New Workout
+        </Link>
+      </div>
+
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Recent Workouts</h2>
+        {recentWorkouts.length === 0 ? (
+          <p className="text-gray-500">No workouts recorded yet</p>
+        ) : (
+          <div className="space-y-3">
+            {recentWorkouts.map((workout) => (
+              <div key={workout.id} className="border rounded-lg p-4 space-y-2">
+                <div className="flex justify-between items-center">
+                  <div className="flex-1">
+                    <h3 className="font-semibold">{workout.name}</h3>
+                    <span className="text-sm text-gray-500">
+                      {format(new Date(workout.date), "MMM d, yyyy")}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setShowConfirmDelete(workout.id)}
+                    className="text-red-500 hover:text-red-700 p-2"
+                    aria-label="Delete workout"
+                  >
+                    🗑️
+                  </button>
+                </div>
+                <div className="text-sm text-gray-600">
+                  {workout.exercises.length} exercises
+                </div>
+                <div className="text-sm">
+                  {workout.exercises
+                    .map((exercise) => exercise.name)
+                    .join(", ")}
+                </div>
+
+                {showConfirmDelete === workout.id && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-lg p-6 max-w-sm w-full space-y-4">
+                      <h4 className="font-semibold">Delete Workout</h4>
+                      <p>
+                        Are you sure you want to delete this workout? This
+                        action cannot be undone.
+                      </p>
+                      <div className="flex justify-end space-x-2">
+                        <button
+                          onClick={() => setShowConfirmDelete(null)}
+                          className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => deleteWorkout(workout.id)}
+                          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
