@@ -167,7 +167,7 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
                     type="number"
                     inputMode="numeric"
                     pattern="[0-9]*"
-                    value={set.weight}
+                    value={set.weight || ""}
                     onChange={(e) =>
                       updateSet(exerciseIndex, setIndex, {
                         ...set,
@@ -180,7 +180,7 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
                     type="number"
                     inputMode="numeric"
                     pattern="[0-9]*"
-                    value={set.reps}
+                    value={set.reps || ""}
                     onChange={(e) =>
                       updateSet(exerciseIndex, setIndex, {
                         ...set,
@@ -221,8 +221,10 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
                     <input
                       id={`duration-${exercise.id}`}
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       placeholder="0"
-                      value={exercise.sets.duration}
+                      value={exercise.sets.duration || ""}
                       onChange={(e) => {
                         const newExercises = [...exercises];
                         newExercises[exerciseIndex].sets = {
@@ -250,8 +252,10 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
                     <input
                       id={`distance-${exercise.id}`}
                       type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       placeholder="0"
-                      value={exercise.sets.distance}
+                      value={exercise.sets.distance || ""}
                       onChange={(e) => {
                         const newExercises = [...exercises];
                         newExercises[exerciseIndex].sets = {
