@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Workout } from "../types/workout";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 export function Home() {
   const [workoutHistory, setWorkoutHistory] = useState<Workout[]>(() =>
@@ -10,6 +10,9 @@ export function Home() {
   const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(
     null
   );
+  const [showExport, setShowExport] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showImport, setShowImport] = useState(false);
 
   const recentWorkouts = workoutHistory
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -20,6 +23,51 @@ export function Home() {
     setWorkoutHistory(updatedWorkouts);
     localStorage.setItem("workoutHistory", JSON.stringify(updatedWorkouts));
     setShowConfirmDelete(null);
+  };
+
+  const handleExport = () => {
+    setShowExport(true);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target?.result as string);
+        if (Array.isArray(importedData)) {
+          setWorkoutHistory(importedData);
+          localStorage.setItem("workoutHistory", JSON.stringify(importedData));
+          alert("Workout history imported successfully!");
+        } else {
+          alert("Invalid file format. Please upload a valid JSON file.");
+        }
+      } catch (error) {
+        alert("Error importing workout history. Please check the file format.");
+        console.error(error);
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = ""; // Reset file input
+  };
+
+  const handleImportFromText = (jsonText: string) => {
+    try {
+      const importedData = JSON.parse(jsonText);
+      if (Array.isArray(importedData)) {
+        setWorkoutHistory(importedData);
+        localStorage.setItem("workoutHistory", JSON.stringify(importedData));
+        alert("Workout history imported successfully!");
+        setShowImport(false);
+      } else {
+        alert("Invalid format. Please provide a valid JSON array.");
+      }
+    } catch (error) {
+      alert("Error parsing JSON. Please check the format.");
+      console.error(error);
+    }
   };
 
   return (
@@ -33,6 +81,85 @@ export function Home() {
           New Workout
         </Link>
       </div>
+
+      <div className="flex space-x-2">
+        <button
+          onClick={handleExport}
+          className="bg-green-500 text-white px-4 py-2 rounded-lg"
+        >
+          Export History
+        </button>
+        <button
+          onClick={() => setShowImport(true)}
+          className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
+        >
+          Import History
+        </button>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileUpload}
+          accept=".json"
+          className="hidden"
+        />
+      </div>
+
+      {showExport && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full space-y-4">
+            <h2 className="font-semibold">Export Workout History</h2>
+            <textarea
+              className="w-full h-96 border rounded-lg p-2 font-mono text-sm"
+              value={JSON.stringify(workoutHistory, null, 2)}
+              readOnly
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowExport(false)}
+                className="px-4 py-2 bg-gray-200 rounded-lg"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showImport && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full space-y-4">
+            <h2 className="font-semibold">Import Workout History</h2>
+            <p className="text-sm text-gray-600">
+              Paste your workout history JSON data below:
+            </p>
+            <textarea
+              className="w-full h-96 border rounded-lg p-2 font-mono text-sm"
+              placeholder="Paste JSON here..."
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowImport(false)}
+                className="px-4 py-2 bg-gray-200 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={(e) => {
+                  const textarea = (e.target as HTMLElement)
+                    .closest(".bg-white")
+                    ?.querySelector("textarea");
+                  if (textarea) {
+                    handleImportFromText(textarea.value);
+                  }
+                }}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+              >
+                Import
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Recent Workouts</h2>
