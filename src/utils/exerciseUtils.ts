@@ -10,7 +10,6 @@ export function getSimilarExercises(searchTerm: string): string[] {
 
     workoutHistory.forEach((workout: Workout) => {
       workout.exercises.forEach((exercise: WorkoutExercise) => {
-        console.log(exercise);
         exerciseNames.add(exercise.name.toLowerCase());
       });
     });

@@ -10,7 +10,25 @@ export function RestTimer({ onClose }: Props) {
   const [isBlinking, setIsBlinking] = useState(false);
   const [totalSeconds, setTotalSeconds] = useState(60);
 
-  const audioRef = useMemo(() => new Audio("/bell.mp3"), []);
+  const audioRef = useMemo(() => {
+    const audio = new Audio("/bell.mp3");
+    if ("mozAudioChannelType" in audio) {
+      audio.mozAudioChannelType = "notification"; // For Firefox
+    }
+    if ("webkitPreservesPitch" in audio) {
+      audio.webkitPreservesPitch = false; // For Safari
+    }
+    return audio;
+  }, []);
+
+  useEffect(() => {
+    if (audioRef) {
+      // Prevent audio from interrupting other sounds
+      audioRef.preservesPitch = false;
+      // Set audio to not be affected by system volume
+      audioRef.volume = 1.0;
+    }
+  }, [audioRef]);
 
   const progress = (seconds / totalSeconds) * 100;
 
