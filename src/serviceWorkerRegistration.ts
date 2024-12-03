@@ -34,7 +34,7 @@ export function register() {
                   )
                 ) {
                   newWorker.postMessage({ type: "skipWaiting" });
-                  window.location.reload();
+                  // Don't reload here, let the controllerchange event handle it
                 }
               }
             });
@@ -46,10 +46,9 @@ export function register() {
     });
 
     // Handle updates when the user returns to the app
-    let refreshing = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (!refreshing) {
-        refreshing = true;
+      // Only reload if this was triggered by skipWaiting
+      if (document.visibilityState === "visible") {
         window.location.reload();
       }
     });
