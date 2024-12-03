@@ -73,8 +73,10 @@ export function Home() {
   return (
     <div className="p-4 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Workout Tracker</h1>
-        <h3 className="text-sm text-gray-500">Version 0.1.1</h3>
+        <div>
+          <h1 className="text-2xl font-bold">Workout Tracker</h1>
+          <h3 className="text-sm text-gray-500">Version 0.1.2</h3>
+        </div>
         <Link
           to="/workout"
           className="bg-blue-500 text-white px-4 py-2 rounded-lg"
