@@ -1,4 +1,4 @@
-const CACHE_NAME = 'workout-tracker-v2';
+const CACHE_NAME = 'workout-tracker-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -9,12 +9,25 @@ const ASSETS_TO_CACHE = [
 ];
 
 // Skip waiting and claim clients immediately
-self.skipWaiting();
 self.addEventListener('activate', event => {
-  event.waitUntil(clients.claim());
+  event.waitUntil(
+    Promise.all([
+      // Clean up old caches
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames
+            .filter(cacheName => cacheName !== CACHE_NAME)
+            .map(cacheName => caches.delete(cacheName))
+        );
+      }),
+      // Take control of all clients immediately
+      clients.claim()
+    ])
+  );
 });
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
@@ -24,27 +37,27 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      // Always try network first, fall back to cache
-      return fetch(event.request)
-        .then(networkResponse => {
-          // Update cache with new response
-          if (networkResponse.ok) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request, responseToCache);
-            });
-          }
-          return networkResponse;
-        })
-        .catch(() => response || fetch(event.request));
-    })
+    fetch(event.request)
+      .then(response => {
+        // Cache successful responses
+        if (response.ok) {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return response;
+      })
+      .catch(() => {
+        // Fallback to cache only if fetch fails
+        return caches.match(event.request);
+      })
   );
 });
 
-// Listen for updates
+// Listen for skipWaiting message
 self.addEventListener('message', (event) => {
-  if (event.data === 'skipWaiting') {
+  if (event.data && event.data.type === 'skipWaiting') {
     self.skipWaiting();
   }
 }); 
