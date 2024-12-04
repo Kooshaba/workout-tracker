@@ -164,6 +164,29 @@ export function Home() {
         </div>
       )}
 
+      {showConfirmDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full space-y-4">
+            <h2 className="font-semibold">Delete Workout</h2>
+            <p>Are you sure you want to delete this workout?</p>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowConfirmDelete(null)}
+                className="px-4 py-2 bg-gray-200 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteWorkout(showConfirmDelete)}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Recent Workouts</h2>
         {recentWorkouts.length === 0 ? (
@@ -173,12 +196,23 @@ export function Home() {
             {recentWorkouts.map((workout) => (
               <div key={workout.id} className="border rounded-lg p-4 space-y-2">
                 <div className="flex justify-between items-center">
-                  <div className="flex-1">
+                  <Link
+                    to={`/workout/${workout.id}`}
+                    className="flex-1 hover:text-blue-500"
+                  >
                     <h3 className="font-semibold">{workout.name}</h3>
                     <span className="text-sm text-gray-500">
                       {format(new Date(workout.date), "MMM d, yyyy")}
                     </span>
-                  </div>
+                    <div className="text-sm text-gray-600">
+                      {workout.exercises.length} exercises
+                    </div>
+                    <div className="text-sm">
+                      {workout.exercises
+                        .map((exercise) => exercise.name)
+                        .join(", ")}
+                    </div>
+                  </Link>
                   <button
                     onClick={() => setShowConfirmDelete(workout.id)}
                     className="text-red-500 hover:text-red-700 p-2"
@@ -187,40 +221,6 @@ export function Home() {
                     🗑️
                   </button>
                 </div>
-                <div className="text-sm text-gray-600">
-                  {workout.exercises.length} exercises
-                </div>
-                <div className="text-sm">
-                  {workout.exercises
-                    .map((exercise) => exercise.name)
-                    .join(", ")}
-                </div>
-
-                {showConfirmDelete === workout.id && (
-                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-lg p-6 max-w-sm w-full space-y-4">
-                      <h4 className="font-semibold">Delete Workout</h4>
-                      <p>
-                        Are you sure you want to delete this workout? This
-                        action cannot be undone.
-                      </p>
-                      <div className="flex justify-end space-x-2">
-                        <button
-                          onClick={() => setShowConfirmDelete(null)}
-                          className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => deleteWorkout(workout.id)}
-                          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
           </div>

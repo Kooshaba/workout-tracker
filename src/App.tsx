@@ -4,7 +4,8 @@ import { Home } from "./pages/Home";
 import { WorkoutLog } from "./pages/WorkoutLog";
 import { Progress } from "./pages/Progress";
 import { Templates } from "./pages/Templates";
-// import { Calendar } from "./pages/Calendar";
+import { CalendarPage } from "./pages/Calendar";
+import { WorkoutDetails } from "./pages/WorkoutDetails";
 
 function App() {
   return (
@@ -16,7 +17,8 @@ function App() {
             <Route path="/workout" element={<WorkoutLog />} />
             <Route path="/progress" element={<Progress />} />
             <Route path="/templates" element={<Templates />} />
-            {/* <Route path="/calendar" element={<Calendar />} /> */}
+            <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/workout/:id" element={<WorkoutDetails />} />
           </Routes>
           <Navigation />
         </div>
