@@ -44,14 +44,6 @@ export function register() {
         console.error("ServiceWorker registration failed:", error);
       }
     });
-
-    // Handle updates when the user returns to the app
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      // Only reload if this was triggered by skipWaiting
-      if (document.visibilityState === "visible") {
-        window.location.reload();
-      }
-    });
   }
 }
 
