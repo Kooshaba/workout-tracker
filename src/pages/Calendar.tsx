@@ -9,15 +9,25 @@ export function CalendarPage() {
   const [workouts] = useState<Workout[]>(() =>
     JSON.parse(localStorage.getItem("workoutHistory") || "[]")
   );
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   // Create a Set of dates that have workouts
   const workoutDates = new Set(
     workouts.map((workout) => format(new Date(workout.date), "yyyy-MM-dd"))
   );
 
+  // Get workouts for selected date
+  const selectedWorkouts = workouts.filter(
+    (workout) =>
+      format(new Date(workout.date), "yyyy-MM-dd") ===
+      format(selectedDate, "yyyy-MM-dd")
+  );
+
   const tileClassName = ({ date }: { date: Date }) => {
     const formattedDate = format(date, "yyyy-MM-dd");
-    return workoutDates.has(formattedDate) ? "bg-blue-200 rounded-lg" : "";
+    return workoutDates.has(formattedDate)
+      ? "!bg-green-500 !rounded-lg font-bold"
+      : "";
   };
 
   return (
@@ -26,18 +36,21 @@ export function CalendarPage() {
 
       <div className="calendar-container">
         <Calendar
+          onChange={(value) => setSelectedDate(value as Date)}
+          value={selectedDate}
           tileClassName={tileClassName}
           className="w-full border-0 rounded-lg"
         />
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Workout History</h2>
-        {workouts
-          .sort(
-            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-          )
-          .map((workout) => (
+        <h2 className="text-xl font-semibold">
+          Workouts on {format(selectedDate, "MMMM d, yyyy")}
+        </h2>
+        {selectedWorkouts.length === 0 ? (
+          <p className="text-gray-500">No workouts on this day</p>
+        ) : (
+          selectedWorkouts.map((workout) => (
             <Link
               key={workout.id}
               to={`/workout/${workout.id}`}
@@ -47,15 +60,19 @@ export function CalendarPage() {
                 <div>
                   <h3 className="font-semibold">{workout.name}</h3>
                   <span className="text-sm text-gray-500">
-                    {format(new Date(workout.date), "MMM d, yyyy")}
+                    {format(new Date(workout.date), "h:mm a")}
                   </span>
                 </div>
                 <div className="text-sm text-gray-600">
                   {workout.exercises.length} exercises
                 </div>
               </div>
+              <div className="text-sm text-gray-500 mt-1">
+                {workout.exercises.map((exercise) => exercise.name).join(", ")}
+              </div>
             </Link>
-          ))}
+          ))
+        )}
       </div>
     </div>
   );
