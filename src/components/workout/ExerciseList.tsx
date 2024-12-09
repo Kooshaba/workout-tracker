@@ -1,4 +1,9 @@
-import { WorkoutExercise, StrengthSet, Workout } from "../../types/workout";
+import {
+  WorkoutExercise,
+  StrengthSet,
+  Workout,
+  CardioSession,
+} from "../../types/workout";
 
 type Props = {
   exercises: WorkoutExercise[];
@@ -110,6 +115,18 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
     onUpdate(newExercises);
   };
 
+  const isStrengthExercise = <T extends WorkoutExercise>(
+    exercise: T
+  ): exercise is T & { sets: StrengthSet[] } => {
+    return Array.isArray(exercise.sets);
+  };
+
+  const isCardioExercise = <T extends WorkoutExercise>(
+    exercise: T
+  ): exercise is T & { sets: CardioSession } => {
+    return !Array.isArray(exercise.sets);
+  };
+
   return (
     <div className="space-y-4">
       {exercises.map((exercise, exerciseIndex) => (
@@ -133,7 +150,7 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
             </div>
           </div>
 
-          {Array.isArray(exercise.sets) ? (
+          {isStrengthExercise(exercise) && (
             // Strength Exercise
             <div className="space-y-2">
               <div className="grid grid-cols-5 gap-2 text-sm font-medium">
@@ -165,8 +182,9 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
                   </button>
                   <input
                     type="number"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
+                    inputMode="decimal"
+                    step="0.1"
+                    pattern="[0-9]*\.?[0-9]*"
                     value={set.weight || ""}
                     onChange={(e) =>
                       updateSet(exerciseIndex, setIndex, {
@@ -206,7 +224,9 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
                 Add Set
               </button>
             </div>
-          ) : (
+          )}
+
+          {isCardioExercise(exercise) && (
             // Cardio Exercise
             <div className="space-y-2">
               <div className="grid grid-cols-3 gap-4">
@@ -217,27 +237,63 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
                   >
                     Duration
                   </label>
-                  <div className="relative">
-                    <input
-                      id={`duration-${exercise.id}`}
-                      type="number"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      placeholder="0"
-                      value={exercise.sets.duration || ""}
-                      onChange={(e) => {
-                        const newExercises = [...exercises];
-                        newExercises[exerciseIndex].sets = {
-                          ...exercise.sets,
-                          duration: Number(e.target.value),
-                        };
-                        onUpdate(newExercises);
-                      }}
-                      className="w-full border rounded px-2 py-1"
-                    />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-                      min
-                    </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
+                      <input
+                        id={`duration-${exercise.id}`}
+                        type="number"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="0"
+                        value={Math.floor(exercise.sets.duration) || ""}
+                        onChange={(e) => {
+                          const minutes = Number(e.target.value);
+                          const seconds = exercise.sets.duration
+                            ? (exercise.sets.duration % 1) * 60
+                            : 0;
+                          const newExercises = [...exercises];
+                          newExercises[exerciseIndex].sets = {
+                            ...exercise.sets,
+                            duration: minutes + seconds / 60,
+                          };
+                          onUpdate(newExercises);
+                        }}
+                        className="w-full border rounded px-2 py-1"
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                        min
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        id={`duration-seconds-${exercise.id}`}
+                        type="number"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        min="0"
+                        max="59"
+                        placeholder="0"
+                        value={
+                          Math.round((exercise.sets.duration % 1) * 60) || ""
+                        }
+                        onChange={(e) => {
+                          const minutes = Math.floor(
+                            exercise.sets.duration || 0
+                          );
+                          const seconds = Number(e.target.value);
+                          const newExercises = [...exercises];
+                          newExercises[exerciseIndex].sets = {
+                            ...exercise.sets,
+                            duration: minutes + seconds / 60,
+                          };
+                          onUpdate(newExercises);
+                        }}
+                        className="w-full border rounded px-2 py-1"
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                        sec
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -252,8 +308,9 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
                     <input
                       id={`distance-${exercise.id}`}
                       type="number"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
+                      inputMode="decimal"
+                      step="0.1"
+                      pattern="[0-9]*\.?[0-9]*"
                       placeholder="0"
                       value={exercise.sets.distance || ""}
                       onChange={(e) => {
