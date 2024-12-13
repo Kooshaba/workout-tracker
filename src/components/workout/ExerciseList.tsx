@@ -4,6 +4,7 @@ import {
   Workout,
   CardioSession,
 } from "../../types/workout";
+import { useRef } from "react";
 
 type Props = {
   exercises: WorkoutExercise[];
@@ -12,6 +13,8 @@ type Props = {
 };
 
 export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
+  const lastSetRef = useRef<HTMLInputElement>(null);
+
   const getLastCompletedSet = (exerciseName: string): StrengthSet | null => {
     const workoutHistory = JSON.parse(
       localStorage.getItem("workoutHistory") || "[]"
@@ -81,6 +84,17 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
 
       exercise.sets.push(newSet);
       onUpdate(newExercises);
+
+      // Schedule focus for after the state update
+      setTimeout(() => {
+        if (lastSetRef.current) {
+          lastSetRef.current.focus();
+          lastSetRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+      }, 0);
     }
   };
 
@@ -209,6 +223,9 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
                       })
                     }
                     className="border rounded px-2 py-1"
+                    ref={
+                      setIndex === exercise.sets.length - 1 ? lastSetRef : null
+                    }
                   />
                   <button
                     onClick={() => removeSet(exerciseIndex, setIndex)}

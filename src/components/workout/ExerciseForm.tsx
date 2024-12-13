@@ -3,7 +3,10 @@ import { WorkoutExercise, StrengthSet } from "../../types/workout";
 import { getSimilarExercises } from "../../utils/exerciseUtils";
 
 type Props = {
-  onAddExercise: (exercise: WorkoutExercise) => void;
+  onAddExercise: (
+    exercise: WorkoutExercise,
+    shouldFocusLastSet?: boolean
+  ) => void;
 };
 
 export function ExerciseForm({ onAddExercise }: Props) {
@@ -54,7 +57,7 @@ export function ExerciseForm({ onAddExercise }: Props) {
       notes: "",
     };
 
-    onAddExercise(exercise);
+    onAddExercise(exercise, true);
     setExerciseName("");
   };
 
