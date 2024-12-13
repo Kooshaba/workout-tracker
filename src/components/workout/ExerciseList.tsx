@@ -8,7 +8,7 @@ import {
 type Props = {
   exercises: WorkoutExercise[];
   onUpdate: (exercises: WorkoutExercise[]) => void;
-  onTimerStart: () => void;
+  onTimerStart: (exerciseName: string) => void;
 };
 
 export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
@@ -134,7 +134,10 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold">{exercise.name}</h3>
             <div className="flex gap-2">
-              <button onClick={onTimerStart} className="text-blue-500">
+              <button
+                onClick={() => onTimerStart(exercise.name)}
+                className="text-blue-500"
+              >
                 Start Timer
               </button>
 

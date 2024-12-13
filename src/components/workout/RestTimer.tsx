@@ -1,43 +1,49 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 
 type Props = {
   onClose: () => void;
+  exerciseName: string;
 };
 
-export function RestTimer({ onClose }: Props) {
-  const [seconds, setSeconds] = useState(60);
+export function RestTimer({ onClose, exerciseName }: Props) {
+  const DEFAULT_TIME = 90;
+
+  const [seconds, setSeconds] = useState(() => {
+    const savedTimes = JSON.parse(
+      localStorage.getItem("exerciseRestTimes") || "{}"
+    );
+    return savedTimes[exerciseName] || DEFAULT_TIME;
+  });
   const [isActive, setIsActive] = useState(false);
   const [isBlinking, setIsBlinking] = useState(false);
-  const [totalSeconds, setTotalSeconds] = useState(60);
-
-  const audioRef = useMemo(() => {
-    const audio = new Audio("/bell.mp3");
-    if ("mozAudioChannelType" in audio) {
-      audio.mozAudioChannelType = "notification"; // For Firefox
-    }
-    if ("webkitPreservesPitch" in audio) {
-      audio.webkitPreservesPitch = false; // For Safari
-    }
-    return audio;
-  }, []);
-
-  useEffect(() => {
-    if (audioRef) {
-      // Prevent audio from interrupting other sounds
-      audioRef.preservesPitch = false;
-      // Set audio to not be affected by system volume
-      audioRef.volume = 1.0;
-    }
-  }, [audioRef]);
+  const [totalSeconds, setTotalSeconds] = useState(seconds);
 
   const progress = (seconds / totalSeconds) * 100;
+
+  const handleStart = () => {
+    if (!isActive) {
+      const savedTimes = JSON.parse(
+        localStorage.getItem("exerciseRestTimes") || "{}"
+      );
+      savedTimes[exerciseName] = seconds;
+      localStorage.setItem("exerciseRestTimes", JSON.stringify(savedTimes));
+    }
+    setIsActive(!isActive);
+  };
+
+  const handleReset = () => {
+    setSeconds(DEFAULT_TIME);
+    setTotalSeconds(DEFAULT_TIME);
+    setIsActive(false);
+    setIsBlinking(false);
+  };
 
   useEffect(() => {
     let interval: number;
 
     if (isActive && seconds > 0) {
       interval = setInterval(() => {
-        setSeconds((seconds) => seconds - 1);
+        setSeconds((seconds: number) => seconds - 1);
       }, 1000);
 
       if (seconds <= 5) {
@@ -46,11 +52,10 @@ export function RestTimer({ onClose }: Props) {
     } else if (seconds === 0) {
       setIsActive(false);
       setIsBlinking(false);
-      audioRef.play();
     }
 
     return () => clearInterval(interval);
-  }, [audioRef, isActive, seconds]);
+  }, [isActive, seconds]);
 
   const adjustTime = (adjustment: number) => {
     const newTime = Math.max(0, seconds + adjustment);
@@ -58,90 +63,84 @@ export function RestTimer({ onClose }: Props) {
     setTotalSeconds(newTime);
   };
 
-  const getAnimationClass = () => {
-    if (seconds <= 3) return "animate-bounce";
-    if (seconds <= 5) return "animate-pulse";
-    return "";
-  };
-
   return (
-    <div
-      className={`fixed inset-0 flex items-center justify-center ${
-        isBlinking
-          ? "animate-blink bg-red-500 bg-opacity-50"
-          : "bg-black bg-opacity-50"
-      }`}
-    >
-      <div className="bg-white p-6 rounded-lg w-64">
-        <div className="w-full h-2 bg-gray-200 rounded-full mb-4 overflow-hidden">
+    <div className="fixed bottom-24 left-0 right-0 bg-white shadow-lg p-2 z-50">
+      <div className="max-w-3xl mx-auto">
+        {/* Progress bar */}
+        <div className="w-full h-1 bg-gray-200 rounded-full mb-2">
           <div
-            className="h-full bg-blue-500 transition-all duration-1000 ease-linear"
+            className={`h-full transition-all duration-1000 ease-linear rounded-full ${
+              isBlinking ? "bg-red-500" : "bg-blue-500"
+            }`}
             style={{ width: `${progress}%` }}
           />
         </div>
 
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => adjustTime(-10)}
-            className="bg-gray-200 hover:bg-gray-300 rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold"
-          >
-            -10
-          </button>
-          <div
-            className={`text-4xl font-bold text-center ${getAnimationClass()}`}
-          >
-            {Math.floor(seconds / 60)}:
-            {(seconds % 60).toString().padStart(2, "0")}
+        <div className="flex items-center justify-between gap-2">
+          {/* Timer display and quick adjust buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => adjustTime(-10)}
+              className="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg px-4 py-2 text-base font-medium touch-manipulation"
+            >
+              -10s
+            </button>
+            <div
+              style={{
+                fontSize: "2rem",
+              }}
+              className="font-bold min-w-[100px] text-center"
+            >
+              {Math.floor(seconds / 60)}:
+              {(seconds % 60).toString().padStart(2, "0")}
+            </div>
+            <button
+              onClick={() => adjustTime(10)}
+              className="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg px-4 py-2 text-base font-medium touch-manipulation"
+            >
+              +10s
+            </button>
           </div>
-          <button
-            onClick={() => adjustTime(10)}
-            className="bg-gray-200 hover:bg-gray-300 rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold"
-          >
-            +10
-          </button>
-        </div>
 
-        <div className="space-y-2">
-          <button
-            onClick={() => adjustTime(-60)}
-            className="w-full bg-gray-200 py-2 rounded-lg"
-          >
-            -1:00
-          </button>
-          <button
-            onClick={() => adjustTime(-30)}
-            className="w-full bg-gray-200 py-2 rounded-lg"
-          >
-            -0:30
-          </button>
-          <button
-            onClick={() => adjustTime(60)}
-            className="w-full bg-gray-200 py-2 rounded-lg"
-          >
-            +1:00
-          </button>
-          <button
-            onClick={() => adjustTime(30)}
-            className="w-full bg-gray-200 py-2 rounded-lg"
-          >
-            +0:30
-          </button>
-
-          <button
-            onClick={() => setIsActive(!isActive)}
-            className={`w-full py-2 rounded-lg ${
-              isActive ? "bg-red-500 text-white" : "bg-blue-500 text-white"
-            }`}
-          >
-            {isActive ? "Pause" : "Start"}
-          </button>
-
-          <button
-            onClick={onClose}
-            className="w-full bg-gray-200 py-2 rounded-lg"
-          >
-            Close
-          </button>
+          {/* Control buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleReset}
+              className="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg px-4 py-2 text-base font-medium touch-manipulation"
+              title="Reset to 90s"
+            >
+              ↺
+            </button>
+            <button
+              onClick={() => adjustTime(-30)}
+              className="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg px-4 py-2 text-base font-medium touch-manipulation"
+            >
+              -30s
+            </button>
+            <button
+              onClick={() => adjustTime(30)}
+              className="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg px-4 py-2 text-base font-medium touch-manipulation"
+            >
+              +30s
+            </button>
+            <button
+              onClick={handleStart}
+              className={`px-6 py-2 rounded-lg text-base font-medium touch-manipulation ${
+                isActive
+                  ? "bg-red-500 hover:bg-red-600 active:bg-red-700 text-white"
+                  : "bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white"
+              }`}
+            >
+              {isActive ? "Pause" : "Start"}
+            </button>
+            <button
+              onClick={onClose}
+              className="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg px-4 py-2 text-base font-medium touch-manipulation"
+              aria-label="Close timer"
+            >
+              ✕
+            </button>
+          </div>
         </div>
       </div>
     </div>

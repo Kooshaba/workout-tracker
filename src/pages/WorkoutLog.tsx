@@ -17,6 +17,7 @@ export function WorkoutLog() {
   );
   const [showTimer, setShowTimer] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [currentExerciseName, setCurrentExerciseName] = useState("");
 
   const startNewWorkout = () => {
     setCurrentWorkout({
@@ -162,10 +163,18 @@ export function WorkoutLog() {
                 exercises,
               });
             }}
-            onTimerStart={() => setShowTimer(true)}
+            onTimerStart={(exerciseName) => {
+              setShowTimer(true);
+              setCurrentExerciseName(exerciseName);
+            }}
           />
 
-          {showTimer && <RestTimer onClose={() => setShowTimer(false)} />}
+          {showTimer && (
+            <RestTimer
+              exerciseName={currentExerciseName}
+              onClose={() => setShowTimer(false)}
+            />
+          )}
         </div>
       )}
     </div>
