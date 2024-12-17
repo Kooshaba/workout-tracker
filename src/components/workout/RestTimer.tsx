@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 type Props = {
   onClose: () => void;
@@ -7,6 +7,7 @@ type Props = {
 
 export function RestTimer({ onClose, exerciseName }: Props) {
   const DEFAULT_TIME = 90;
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const [seconds, setSeconds] = useState(() => {
     const savedTimes = JSON.parse(
@@ -20,6 +21,29 @@ export function RestTimer({ onClose, exerciseName }: Props) {
 
   const progress = (seconds / totalSeconds) * 100;
 
+  useEffect(() => {
+    let blinkInterval: number;
+    const container = containerRef.current;
+    if (seconds === 0 && container) {
+      let isRed = false;
+      blinkInterval = setInterval(() => {
+        if (container) {
+          container.style.backgroundColor = isRed ? "#fff" : "#dc2626";
+          isRed = !isRed;
+        }
+      }, 500);
+    }
+
+    return () => {
+      if (blinkInterval) {
+        clearInterval(blinkInterval);
+      }
+      if (container) {
+        container.style.backgroundColor = "#fff";
+      }
+    };
+  }, [seconds]);
+
   const handleStart = () => {
     if (!isActive) {
       const savedTimes = JSON.parse(
@@ -29,6 +53,9 @@ export function RestTimer({ onClose, exerciseName }: Props) {
       localStorage.setItem("exerciseRestTimes", JSON.stringify(savedTimes));
     }
     setIsActive(!isActive);
+    if (seconds === 0) {
+      setSeconds(totalSeconds);
+    }
   };
 
   const handleReset = () => {
@@ -64,7 +91,10 @@ export function RestTimer({ onClose, exerciseName }: Props) {
   };
 
   return (
-    <div className="fixed bottom-24 left-0 right-0 bg-white shadow-lg p-1 z-50">
+    <div
+      ref={containerRef}
+      className="fixed bottom-24 left-0 right-0 bg-white shadow-lg p-1 z-50 transition-colors duration-100"
+    >
       <div className="max-w-3xl mx-auto">
         {/* Progress bar */}
         <div className="w-full h-1 bg-gray-200 rounded-full mb-1">
