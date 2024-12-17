@@ -6,6 +6,7 @@ import { Progress } from "./pages/Progress";
 import { Templates } from "./pages/Templates";
 import { CalendarPage } from "./pages/Calendar";
 import { WorkoutDetails } from "./pages/WorkoutDetails";
+import { ExerciseHistory } from "./pages/ExerciseHistory";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
             <Route path="/templates" element={<Templates />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/workout/:id" element={<WorkoutDetails />} />
+            <Route path="/exercise/:name" element={<ExerciseHistory />} />
           </Routes>
           <Navigation />
         </div>

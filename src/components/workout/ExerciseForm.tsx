@@ -28,14 +28,7 @@ export function ExerciseForm({ onAddExercise }: Props) {
     }
   }, [exerciseName]);
 
-  const handleSelectSuggestion = (suggestion: string) => {
-    setExerciseName(suggestion);
-    setShowSuggestions(false);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const createExercise = (name: string) => {
     const initialStrengthSet: StrengthSet = {
       reps: 0,
       weight: 0,
@@ -45,7 +38,7 @@ export function ExerciseForm({ onAddExercise }: Props) {
     const exercise: WorkoutExercise = {
       id: Date.now().toString(),
       exerciseId: Date.now().toString(),
-      name: exerciseName.trim(),
+      name: name.trim(),
       sets:
         exerciseType === "strength"
           ? [initialStrengthSet]
@@ -59,6 +52,16 @@ export function ExerciseForm({ onAddExercise }: Props) {
 
     onAddExercise(exercise, true);
     setExerciseName("");
+  };
+
+  const handleSelectSuggestion = (suggestion: string) => {
+    createExercise(suggestion);
+    setShowSuggestions(false);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createExercise(exerciseName);
   };
 
   return (

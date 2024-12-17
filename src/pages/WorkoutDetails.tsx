@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { format } from "date-fns";
 import { Workout } from "../types/workout";
 
@@ -42,7 +42,12 @@ export function WorkoutDetails() {
       <div className="space-y-6">
         {workout.exercises.map((exercise) => (
           <div key={exercise.id} className="border rounded-lg p-4">
-            <h3 className="font-semibold text-lg mb-2">{exercise.name}</h3>
+            <Link
+              to={`/exercise/${encodeURIComponent(exercise.name)}`}
+              className="font-semibold text-lg mb-2 text-blue-500 hover:text-blue-700"
+            >
+              {exercise.name}
+            </Link>
 
             {Array.isArray(exercise.sets) ? (
               // Strength exercise
