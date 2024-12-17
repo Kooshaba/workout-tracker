@@ -52,8 +52,8 @@ export function ExerciseItem({
 
   return (
     <div className="border rounded-lg p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-semibold">{exercise.name}</h3>
+      <div className="flex justify-between items-start mb-4">
+        <h3 className="text-xl font-semibold mr-4">{exercise.name}</h3>
         <div className="flex items-center">
           <div className="flex gap-2 items-center">
             <Link
@@ -77,7 +77,6 @@ export function ExerciseItem({
                   strokeLinejoin="round"
                 />
               </svg>
-              History
             </Link>
             <button
               onClick={() => onTimerStart(exercise.name)}
@@ -195,11 +194,31 @@ export function ExerciseItem({
             </div>
           ))}
 
+          <div className="h-4" />
+
           <button
             onClick={() => onAddSet(exerciseIndex)}
-            className="w-full border border-blue-500 text-blue-500 rounded-lg py-2 mt-2"
+            className="flex mx-auto items-center justify-around gap-1.5 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-600 px-3 py-1.5 rounded-lg border border-blue-200 transition-colors duration-150 w-full cursor-pointer"
           >
-            Add Set
+            <span className="flex items-center gap-3">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="relative top-[-1px]"
+              >
+                <path
+                  d="M8 1V15M1 8H15"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Add Set
+            </span>
           </button>
         </div>
       )}
