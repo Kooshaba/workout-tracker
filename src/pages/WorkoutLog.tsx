@@ -18,20 +18,25 @@ export function WorkoutLog() {
   const [showTimer, setShowTimer] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [currentExerciseName, setCurrentExerciseName] = useState("");
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
 
   const startNewWorkout = () => {
+    const workoutDate = new Date(selectedDate);
     setCurrentWorkout({
       id: Date.now().toString(),
-      date: new Date().toISOString(),
-      name: "Workout " + new Date().toLocaleDateString(),
+      date: workoutDate.toISOString(),
+      name: "Workout " + workoutDate.toLocaleDateString(),
       exercises: [],
     });
   };
 
   const startFromTemplate = (template: WorkoutTemplate) => {
+    const workoutDate = new Date(selectedDate);
     setCurrentWorkout({
       id: Date.now().toString(),
-      date: new Date().toISOString(),
+      date: workoutDate.toISOString(),
       name: template.name,
       exercises: template.exercises.map((exercise) => ({
         id: Date.now().toString(),
@@ -80,6 +85,21 @@ export function WorkoutLog() {
     <div className="pb-20 p-4">
       {!currentWorkout ? (
         <div className="space-y-4">
+          <div className="space-y-2">
+            <label
+              htmlFor="workout-date"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Workout Date
+            </label>
+            <input
+              type="date"
+              id="workout-date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="w-full border rounded-lg px-3 py-2"
+            />
+          </div>
           <button
             onClick={startNewWorkout}
             className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold"
