@@ -23,6 +23,7 @@ type Props = {
   onRemoveExercise: (exerciseIndex: number) => void;
   onTimerStart: (exerciseName: string) => void;
   getLastCompletedSet: (exerciseName: string) => StrengthSet | null;
+  onUpdateNotes: (exerciseIndex: number, notes: string) => void;
 };
 
 export function ExerciseItem({
@@ -35,6 +36,7 @@ export function ExerciseItem({
   onRemoveExercise,
   onTimerStart,
   getLastCompletedSet,
+  onUpdateNotes,
 }: Props) {
   const lastSetRef = useRef<HTMLInputElement>(null);
 
@@ -327,6 +329,24 @@ export function ExerciseItem({
           </div>
         </div>
       )}
+
+      {/* Add notes textarea for the exercise */}
+      <div className="mt-4 pt-4 border-t">
+        <label
+          htmlFor={`exercise-notes-${exercise.id}`}
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Exercise Notes
+        </label>
+        <textarea
+          id={`exercise-notes-${exercise.id}`}
+          rows={2}
+          className="w-full border rounded-lg px-3 py-2"
+          placeholder="Add notes about this exercise..."
+          value={exercise.notes || ""}
+          onChange={(e) => onUpdateNotes(exerciseIndex, e.target.value)}
+        />
+      </div>
     </div>
   );
 }

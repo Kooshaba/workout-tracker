@@ -143,6 +143,12 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
     onUpdate(newExercises);
   };
 
+  const handleUpdateExerciseNotes = (exerciseIndex: number, notes: string) => {
+    const newExercises = [...exercises];
+    newExercises[exerciseIndex].notes = notes;
+    onUpdate(newExercises);
+  };
+
   return (
     <div className="space-y-4">
       {exercises.map((exercise, exerciseIndex) => (
@@ -157,6 +163,7 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
           onRemoveExercise={handleRemoveExercise}
           onTimerStart={onTimerStart}
           getLastCompletedSet={getLastCompletedSet}
+          onUpdateNotes={handleUpdateExerciseNotes}
         />
       ))}
     </div>

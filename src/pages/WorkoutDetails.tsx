@@ -39,6 +39,14 @@ export function WorkoutDetails() {
         {format(new Date(workout.date), "MMMM d, yyyy 'at' h:mm a")}
       </div>
 
+      {/* Display workout notes if they exist */}
+      {workout.notes && workout.notes.trim() !== "" && (
+        <div className="border rounded-lg p-4 bg-gray-50">
+          <h2 className="font-medium text-gray-700 mb-2">Notes</h2>
+          <p className="whitespace-pre-wrap">{workout.notes}</p>
+        </div>
+      )}
+
       <div className="space-y-6">
         {workout.exercises.map((exercise) => (
           <div key={exercise.id} className="border rounded-lg p-4">
@@ -86,6 +94,16 @@ export function WorkoutDetails() {
                       : "0"}{" "}
                     min/km
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Display exercise notes if they exist */}
+            {exercise.notes && exercise.notes.trim() !== "" && (
+              <div className="mt-3 pt-3 border-t">
+                <div className="text-sm font-medium text-gray-700">Notes</div>
+                <div className="text-gray-600 whitespace-pre-wrap">
+                  {exercise.notes}
                 </div>
               </div>
             )}

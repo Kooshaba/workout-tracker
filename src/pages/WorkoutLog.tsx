@@ -29,6 +29,7 @@ export function WorkoutLog() {
       date: workoutDate.toISOString(),
       name: "Workout " + workoutDate.toLocaleDateString(),
       exercises: [],
+      notes: "",
     });
   };
 
@@ -57,6 +58,7 @@ export function WorkoutLog() {
                 pace: 0,
               } as CardioSession),
       })),
+      notes: "",
     });
     setShowTemplates(false);
   };
@@ -164,6 +166,28 @@ export function WorkoutLog() {
                 Finish
               </button>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="workout-notes"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Workout Notes
+            </label>
+            <textarea
+              id="workout-notes"
+              rows={3}
+              className="w-full border rounded-lg px-3 py-2"
+              placeholder="Add notes about this workout..."
+              value={currentWorkout.notes || ""}
+              onChange={(e) => {
+                setCurrentWorkout({
+                  ...currentWorkout,
+                  notes: e.target.value,
+                });
+              }}
+            />
           </div>
 
           <ExerciseForm
