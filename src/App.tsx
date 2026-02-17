@@ -14,7 +14,7 @@ function App() {
   return (
     <RestTimerProvider>
       <BrowserRouter>
-        <div className="min-h-screen bg-gray-100">
+        <div className="dark-theme min-h-screen bg-gray-100">
           <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg">
             <Routes>
               <Route path="/" element={<Home />} />

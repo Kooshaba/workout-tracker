@@ -1,1 +1,45 @@
 @import "tailwindcss";
+
+/* Quick global dark-mode skin */
+.dark-theme {
+  background: #0b1020 !important;
+  color: #e5e7eb;
+}
+
+.dark-theme .bg-white { background-color: #111827 !important; }
+.dark-theme .bg-gray-50 { background-color: #1f2937 !important; }
+.dark-theme .bg-gray-100 { background-color: #0b1020 !important; }
+.dark-theme .bg-gray-200 { background-color: #374151 !important; }
+
+.dark-theme .text-gray-900 { color: #f9fafb !important; }
+.dark-theme .text-gray-800 { color: #e5e7eb !important; }
+.dark-theme .text-gray-700 { color: #d1d5db !important; }
+.dark-theme .text-gray-600 { color: #cbd5e1 !important; }
+.dark-theme .text-gray-500 { color: #94a3b8 !important; }
+.dark-theme .text-black { color: #f9fafb !important; }
+
+.dark-theme .border,
+.dark-theme .border-gray-100,
+.dark-theme .border-gray-200,
+.dark-theme .border-gray-300 {
+  border-color: #374151 !important;
+}
+
+.dark-theme input,
+.dark-theme textarea,
+.dark-theme select {
+  background: #0f172a !important;
+  color: #e5e7eb !important;
+  border-color: #334155 !important;
+}
+
+.dark-theme input::placeholder,
+.dark-theme textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+.dark-theme .shadow,
+.dark-theme .shadow-lg,
+.dark-theme .shadow-md {
+  box-shadow: none !important;
+}
