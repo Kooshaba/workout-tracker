@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { useRestTimer } from "../context/RestTimerContext";
 import {
   Workout,
   WorkoutTemplate,
@@ -8,16 +9,15 @@ import {
 } from "../types/workout";
 import { ExerciseForm } from "../components/workout/ExerciseForm";
 import { ExerciseList } from "../components/workout/ExerciseList";
-import { RestTimer } from "../components/workout/RestTimer";
+// Rest timer is rendered globally in App
 
 export function WorkoutLog() {
   const [currentWorkout, setCurrentWorkout] = useLocalStorage<Workout | null>(
     "currentWorkout",
     null
   );
-  const [showTimer, setShowTimer] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
-  const [currentExerciseName, setCurrentExerciseName] = useState("");
+  const { openForExercise } = useRestTimer();
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
@@ -208,17 +208,9 @@ export function WorkoutLog() {
               });
             }}
             onTimerStart={(exerciseName) => {
-              setShowTimer(true);
-              setCurrentExerciseName(exerciseName);
+              openForExercise(exerciseName);
             }}
           />
-
-          {showTimer && (
-            <RestTimer
-              exerciseName={currentExerciseName}
-              onClose={() => setShowTimer(false)}
-            />
-          )}
         </div>
       )}
     </div>

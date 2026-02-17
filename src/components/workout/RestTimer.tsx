@@ -1,124 +1,43 @@
-import { useState, useEffect, useRef } from "react";
+import { useRestTimer } from "../../context/RestTimerContext";
 
-type Props = {
-  onClose: () => void;
-  exerciseName: string;
-};
+export function RestTimer() {
+  const {
+    state,
+    remainingSeconds,
+    isBlinking,
+    close,
+    toggleStartPause,
+    reset,
+    adjustTime,
+  } = useRestTimer();
 
-export function RestTimer({ onClose, exerciseName }: Props) {
-  const DEFAULT_TIME = 90;
-  const containerRef = useRef<HTMLDivElement>(null);
+  if (!state.isOpen) return null;
 
-  const [seconds, setSeconds] = useState(() => {
-    const savedTimes = JSON.parse(
-      localStorage.getItem("exerciseRestTimes") || "{}"
-    );
-    return savedTimes[exerciseName] || DEFAULT_TIME;
-  });
-  const [isActive, setIsActive] = useState(false);
-  const [isBlinking, setIsBlinking] = useState(false);
-  const [totalSeconds, setTotalSeconds] = useState(seconds);
-
-  const progress = (seconds / totalSeconds) * 100;
-
-  useEffect(() => {
-    let blinkInterval: number;
-    const container = containerRef.current;
-    if (seconds === 0 && container) {
-      let isRed = false;
-      blinkInterval = setInterval(() => {
-        if (container) {
-          container.style.backgroundColor = isRed ? "#fff" : "#dc2626";
-          isRed = !isRed;
-        }
-      }, 500);
-    }
-
-    return () => {
-      if (blinkInterval) {
-        clearInterval(blinkInterval);
-      }
-      if (container) {
-        container.style.backgroundColor = "#fff";
-      }
-    };
-  }, [seconds]);
-
-  const handleStart = () => {
-    if (!isActive) {
-      const savedTimes = JSON.parse(
-        localStorage.getItem("exerciseRestTimes") || "{}"
-      );
-      savedTimes[exerciseName] = seconds;
-      localStorage.setItem("exerciseRestTimes", JSON.stringify(savedTimes));
-    }
-    setIsActive(!isActive);
-    if (seconds === 0) {
-      setSeconds(totalSeconds);
-    }
-  };
-
-  const handleReset = () => {
-    setSeconds(DEFAULT_TIME);
-    setTotalSeconds(DEFAULT_TIME);
-    setIsActive(false);
-    setIsBlinking(false);
-  };
-
-  useEffect(() => {
-    let interval: number;
-
-    if (isActive && seconds > 0) {
-      interval = setInterval(() => {
-        setSeconds((seconds: number) => seconds - 1);
-      }, 1000);
-
-      if (seconds <= 5) {
-        setIsBlinking(true);
-      }
-    } else if (seconds === 0) {
-      setIsActive(false);
-      setIsBlinking(false);
-    }
-
-    return () => clearInterval(interval);
-  }, [isActive, seconds]);
-
-  const adjustTime = (adjustment: number) => {
-    const newTime = Math.max(0, seconds + adjustment);
-    setSeconds(newTime);
-    setTotalSeconds(newTime);
-  };
+  const progress = state.duration > 0 ? (remainingSeconds / state.duration) * 100 : 0;
 
   return (
-    <div
-      ref={containerRef}
-      className="fixed bottom-24 left-0 right-0 bg-white shadow-lg p-1 z-50 transition-colors duration-100"
-    >
+    <div className="fixed bottom-24 left-0 right-0 bg-white shadow-lg p-1 z-50 transition-colors duration-100">
       <div className="max-w-3xl mx-auto">
-        {/* Progress bar */}
         <div className="w-full h-1 bg-gray-200 rounded-full mb-1">
           <div
-            className={`h-full transition-all duration-1000 ease-linear rounded-full ${
+            className={`h-full transition-all duration-200 ease-linear rounded-full ${
               isBlinking ? "bg-red-500" : "bg-blue-500"
             }`}
-            style={{ width: `${progress}%` }}
+            style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
           />
         </div>
 
         <div className="flex items-center justify-between gap-1">
-          {/* Timer display */}
-          <div
-            style={{
-              fontSize: "1.75rem",
-            }}
-            className="font-bold min-w-[80px] text-center"
-          >
-            {Math.floor(seconds / 60)}:
-            {(seconds % 60).toString().padStart(2, "0")}
+          <div className="min-w-[90px] text-center">
+            <div className="text-[1.6rem] font-bold leading-none">
+              {Math.floor(remainingSeconds / 60)}:
+              {(remainingSeconds % 60).toString().padStart(2, "0")}
+            </div>
+            <div className="text-[10px] text-gray-500 truncate max-w-[90px]">
+              {state.exerciseName || "Rest"}
+            </div>
           </div>
 
-          {/* Control buttons */}
           <div className="flex items-center gap-1">
             <button
               onClick={() => adjustTime(-30)}
@@ -133,24 +52,24 @@ export function RestTimer({ onClose, exerciseName }: Props) {
               +30s
             </button>
             <button
-              onClick={handleReset}
+              onClick={reset}
               className="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg px-3 py-1.5 text-sm font-medium touch-manipulation"
               title="Reset to 90s"
             >
               ↺
             </button>
             <button
-              onClick={handleStart}
+              onClick={toggleStartPause}
               className={`px-4 py-1.5 rounded-lg text-sm font-medium touch-manipulation ${
-                isActive
+                state.isActive
                   ? "bg-red-500 hover:bg-red-600 active:bg-red-700 text-white"
                   : "bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white"
               }`}
             >
-              {isActive ? "Pause" : "Start"}
+              {state.isActive ? "Pause" : "Start"}
             </button>
             <button
-              onClick={onClose}
+              onClick={close}
               className="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg px-3 py-1.5 text-sm font-medium touch-manipulation"
               aria-label="Close timer"
             >
