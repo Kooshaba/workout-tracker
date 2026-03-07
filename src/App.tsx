@@ -9,6 +9,7 @@ import { Templates } from "./pages/Templates";
 import { CalendarPage } from "./pages/Calendar";
 import { WorkoutDetails } from "./pages/WorkoutDetails";
 import { ExerciseHistory } from "./pages/ExerciseHistory";
+import { Coach } from "./pages/Coach";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
               <Route path="/progress" element={<Progress />} />
               <Route path="/templates" element={<Templates />} />
               <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/coach" element={<Coach />} />
               <Route path="/workout/:id" element={<WorkoutDetails />} />
               <Route path="/exercise/:name" element={<ExerciseHistory />} />
             </Routes>

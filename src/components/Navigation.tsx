@@ -9,6 +9,7 @@ export function Navigation() {
     { path: "/progress", label: "Progress", icon: "📈" },
     { path: "/templates", label: "Templates", icon: "📋" },
     { path: "/calendar", label: "Calendar", icon: "📅" },
+    { path: "/coach", label: "Coach", icon: "🧠" },
   ];
 
   return (
