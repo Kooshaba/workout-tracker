@@ -2,23 +2,26 @@ export function register() {
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        // First, try to unregister any existing service workers
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const registration of registrations) {
-          await registration.unregister();
-        }
+        let refreshing = false;
+        const activateWaitingWorker = (registration: ServiceWorkerRegistration) => {
+          registration.waiting?.postMessage({ type: "skipWaiting" });
+        };
 
-        // Register the new service worker
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          if (refreshing) return;
+          refreshing = true;
+          window.location.reload();
+        });
+
         const registration = await navigator.serviceWorker.register("/sw.js", {
-          updateViaCache: "none", // Prevent cache issues on iOS
+          updateViaCache: "none",
         });
 
         console.log("ServiceWorker registration successful");
 
-        // Check for updates immediately
+        activateWaitingWorker(registration);
         await registration.update();
 
-        // Check for updates
         registration.addEventListener("updatefound", () => {
           const newWorker = registration.installing;
           if (newWorker) {
@@ -27,18 +30,20 @@ export function register() {
                 newWorker.state === "installed" &&
                 navigator.serviceWorker.controller
               ) {
-                // New version available
-                if (
-                  confirm(
-                    "A new version is available! Would you like to update?"
-                  )
-                ) {
-                  newWorker.postMessage({ type: "skipWaiting" });
-                  // Don't reload here, let the controllerchange event handle it
-                }
+                activateWaitingWorker(registration);
               }
             });
           }
+        });
+
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") {
+            void registration.update();
+          }
+        });
+
+        window.addEventListener("focus", () => {
+          void registration.update();
         });
       } catch (error) {
         console.error("ServiceWorker registration failed:", error);
