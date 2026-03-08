@@ -4,7 +4,7 @@ import {
   CardioSession,
 } from "../../types/workout";
 import { Link } from "react-router-dom";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Props = {
   exercise: WorkoutExercise;
@@ -24,6 +24,7 @@ type Props = {
   onTimerStart: (exerciseName: string) => void;
   getLastCompletedSet: (exerciseName: string) => StrengthSet | null;
   onUpdateNotes: (exerciseIndex: number, notes: string) => void;
+  animateIn: boolean;
   animatedSetIndex: number | null;
 };
 
@@ -38,9 +39,38 @@ export function ExerciseItem({
   onTimerStart,
   getLastCompletedSet,
   onUpdateNotes,
+  animateIn,
   animatedSetIndex,
 }: Props) {
   const lastSetRef = useRef<HTMLInputElement>(null);
+  const [isExerciseVisible, setIsExerciseVisible] = useState(!animateIn);
+  const [visibleAnimatedSetIndex, setVisibleAnimatedSetIndex] = useState<
+    number | null
+  >(null);
+
+  useEffect(() => {
+    if (!animateIn) return;
+
+    setIsExerciseVisible(false);
+    const frameId = window.requestAnimationFrame(() => {
+      setIsExerciseVisible(true);
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [animateIn]);
+
+  useEffect(() => {
+    if (animatedSetIndex === null) return;
+
+    setVisibleAnimatedSetIndex(null);
+    const frameId = window.requestAnimationFrame(() => {
+      setVisibleAnimatedSetIndex(animatedSetIndex);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [animatedSetIndex]);
 
   const isStrengthExercise = <T extends WorkoutExercise>(
     exercise: T
@@ -55,7 +85,15 @@ export function ExerciseItem({
   };
 
   return (
-    <div className="border rounded-lg p-4">
+    <div
+      className={`border rounded-lg p-4 transition-all duration-300 ease-out motion-reduce:transition-none ${
+        animateIn
+          ? isExerciseVisible
+            ? "translate-y-0 opacity-100"
+            : "translate-y-4 opacity-0"
+          : ""
+      }`}
+    >
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-xl font-semibold mr-4">{exercise.name}</h3>
         <div className="flex items-center">
@@ -132,9 +170,11 @@ export function ExerciseItem({
           {exercise.sets.map((set, setIndex) => (
             <div
               key={setIndex}
-              className={`grid grid-cols-5 gap-2 items-center ${
+              className={`grid grid-cols-5 gap-2 items-center transition-all duration-300 ease-out motion-reduce:transition-none ${
                 setIndex === animatedSetIndex
-                  ? "animate-row-in motion-reduce:animate-none"
+                  ? visibleAnimatedSetIndex === animatedSetIndex
+                    ? "translate-y-0 opacity-100"
+                    : "translate-y-4 opacity-0"
                   : ""
               }`}
             >

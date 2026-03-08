@@ -15,10 +15,35 @@ type Props = {
 
 export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
   const lastSetRef = useRef<HTMLInputElement>(null);
+  const previousExerciseIdsRef = useRef<string[]>(exercises.map((exercise) => exercise.id));
+  const [animatedExerciseIds, setAnimatedExerciseIds] = useState<string[]>([]);
   const [animatedSet, setAnimatedSet] = useState<{
     exerciseId: string;
     setIndex: number;
   } | null>(null);
+
+  useEffect(() => {
+    const nextExerciseIds = exercises.map((exercise) => exercise.id);
+    const newExerciseIds = nextExerciseIds.filter(
+      (id) => !previousExerciseIdsRef.current.includes(id)
+    );
+
+    if (newExerciseIds.length > 0) {
+      setAnimatedExerciseIds(newExerciseIds);
+    }
+
+    previousExerciseIdsRef.current = nextExerciseIds;
+  }, [exercises]);
+
+  useEffect(() => {
+    if (animatedExerciseIds.length === 0) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setAnimatedExerciseIds([]);
+    }, 420);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [animatedExerciseIds]);
 
   useEffect(() => {
     if (!animatedSet) return;
@@ -182,6 +207,7 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
           onTimerStart={onTimerStart}
           getLastCompletedSet={getLastCompletedSet}
           onUpdateNotes={handleUpdateExerciseNotes}
+          animateIn={animatedExerciseIds.includes(exercise.id)}
           animatedSetIndex={
             animatedSet?.exerciseId === exercise.id ? animatedSet.setIndex : null
           }

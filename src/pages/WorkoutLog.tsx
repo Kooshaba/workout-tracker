@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useRestTimer } from "../context/RestTimerContext";
 import {
@@ -21,6 +21,22 @@ export function WorkoutLog() {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
+  const [isWorkoutVisible, setIsWorkoutVisible] = useState(false);
+  const currentWorkoutId = currentWorkout?.id;
+
+  useEffect(() => {
+    if (!currentWorkoutId) {
+      setIsWorkoutVisible(false);
+      return;
+    }
+
+    setIsWorkoutVisible(false);
+    const frameId = window.requestAnimationFrame(() => {
+      setIsWorkoutVisible(true);
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [currentWorkoutId]);
 
   const startNewWorkout = () => {
     const workoutDate = new Date(selectedDate);
@@ -149,7 +165,13 @@ export function WorkoutLog() {
           )}
         </div>
       ) : (
-        <div className="space-y-4 animate-panel-in motion-reduce:animate-none">
+        <div
+          className={`space-y-4 transition-all duration-300 ease-out motion-reduce:transition-none ${
+            isWorkoutVisible
+              ? "translate-y-0 opacity-100"
+              : "translate-y-4 opacity-0"
+          }`}
+        >
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-bold">{currentWorkout.name}</h1>
             <div className="space-x-2">
