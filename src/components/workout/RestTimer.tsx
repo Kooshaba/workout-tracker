@@ -41,36 +41,36 @@ export function RestTimer() {
           <div className="flex items-center gap-1">
             <button
               onClick={() => adjustTime(-30)}
-              className="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg px-3 py-1.5 text-sm font-medium touch-manipulation"
+              className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm font-medium text-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0.5 touch-manipulation"
             >
               -30s
             </button>
             <button
               onClick={() => adjustTime(30)}
-              className="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg px-3 py-1.5 text-sm font-medium touch-manipulation"
+              className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm font-medium text-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0.5 touch-manipulation"
             >
               +30s
             </button>
             <button
               onClick={reset}
-              className="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg px-3 py-1.5 text-sm font-medium touch-manipulation"
+              className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm font-medium text-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0.5 touch-manipulation"
               title="Reset to 90s"
             >
               ↺
             </button>
             <button
               onClick={toggleStartPause}
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium touch-manipulation ${
+              className={`rounded-xl border px-4 py-1.5 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0.5 touch-manipulation ${
                 state.isActive
-                  ? "bg-red-500 hover:bg-red-600 active:bg-red-700 text-white"
-                  : "bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white"
+                  ? "border-rose-900/80 bg-rose-950/50 text-rose-100 hover:bg-rose-900/50"
+                  : "border-sky-800 bg-sky-950/60 text-sky-100 hover:bg-sky-900/70"
               }`}
             >
               {state.isActive ? "Pause" : "Start"}
             </button>
             <button
               onClick={close}
-              className="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg px-3 py-1.5 text-sm font-medium touch-manipulation"
+              className="rounded-xl border border-slate-700 px-3 py-1.5 text-sm font-medium text-slate-300 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800/70 hover:text-slate-100 active:translate-y-0.5 touch-manipulation"
               aria-label="Close timer"
             >
               ✕

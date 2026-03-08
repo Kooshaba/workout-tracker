@@ -70,10 +70,10 @@ export function ExerciseForm({ onAddExercise }: Props) {
         <button
           type="button"
           onClick={() => setExerciseType("strength")}
-          className={`flex-1 py-2 rounded-lg ${
+          className={`flex-1 rounded-xl border px-4 py-2.5 font-semibold transition-all duration-200 ${
             exerciseType === "strength"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-200"
+              ? "border-sky-800 bg-sky-950/60 text-sky-100"
+              : "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-slate-100"
           }`}
         >
           Strength
@@ -81,8 +81,10 @@ export function ExerciseForm({ onAddExercise }: Props) {
         <button
           type="button"
           onClick={() => setExerciseType("cardio")}
-          className={`flex-1 py-2 rounded-lg ${
-            exerciseType === "cardio" ? "bg-blue-500 text-white" : "bg-gray-200"
+          className={`flex-1 rounded-xl border px-4 py-2.5 font-semibold transition-all duration-200 ${
+            exerciseType === "cardio"
+              ? "border-sky-800 bg-sky-950/60 text-sky-100"
+              : "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-slate-100"
           }`}
         >
           Cardio
@@ -116,7 +118,7 @@ export function ExerciseForm({ onAddExercise }: Props) {
         </div>
         <button
           type="submit"
-          className="flex cursor-pointer items-center w-fit gap-1.5 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-600 px-3 py-1.5 rounded-lg border border-blue-200 transition-colors duration-150"
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-sky-800 bg-sky-950/60 px-4 py-2 font-semibold text-sky-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sky-900/70 active:translate-y-0.5"
         >
           <svg
             width="16"

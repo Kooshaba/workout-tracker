@@ -4,7 +4,7 @@ import {
   Workout,
   CardioSession,
 } from "../../types/workout";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ExerciseItem } from "./ExerciseItem";
 
 type Props = {
@@ -15,6 +15,20 @@ type Props = {
 
 export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
   const lastSetRef = useRef<HTMLInputElement>(null);
+  const [animatedSet, setAnimatedSet] = useState<{
+    exerciseId: string;
+    setIndex: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!animatedSet) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setAnimatedSet(null);
+    }, 420);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [animatedSet]);
 
   const getLastCompletedSet = (exerciseName: string): StrengthSet | null => {
     const workoutHistory = JSON.parse(
@@ -111,6 +125,10 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
             };
 
       exercise.sets.push(newSet);
+      setAnimatedSet({
+        exerciseId: exercise.id,
+        setIndex: exercise.sets.length - 1,
+      });
       onUpdate(newExercises);
 
       // Schedule focus for after the state update
@@ -164,6 +182,9 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
           onTimerStart={onTimerStart}
           getLastCompletedSet={getLastCompletedSet}
           onUpdateNotes={handleUpdateExerciseNotes}
+          animatedSetIndex={
+            animatedSet?.exerciseId === exercise.id ? animatedSet.setIndex : null
+          }
         />
       ))}
     </div>

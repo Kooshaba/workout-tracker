@@ -24,6 +24,7 @@ type Props = {
   onTimerStart: (exerciseName: string) => void;
   getLastCompletedSet: (exerciseName: string) => StrengthSet | null;
   onUpdateNotes: (exerciseIndex: number, notes: string) => void;
+  animatedSetIndex: number | null;
 };
 
 export function ExerciseItem({
@@ -37,6 +38,7 @@ export function ExerciseItem({
   onTimerStart,
   getLastCompletedSet,
   onUpdateNotes,
+  animatedSetIndex,
 }: Props) {
   const lastSetRef = useRef<HTMLInputElement>(null);
 
@@ -60,7 +62,7 @@ export function ExerciseItem({
           <div className="flex gap-2 items-center">
             <Link
               to={`/exercise/${encodeURIComponent(exercise.name)}`}
-              className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 text-emerald-600 px-3 py-1.5 rounded-lg border border-emerald-200 transition-colors duration-150"
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-emerald-900/80 bg-emerald-950/50 px-3 py-2 text-emerald-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-900/50 active:translate-y-0.5"
               title="View exercise history"
             >
               <svg
@@ -82,7 +84,7 @@ export function ExerciseItem({
             </Link>
             <button
               onClick={() => onTimerStart(exercise.name)}
-              className="flex cursor-pointer items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 text-indigo-600 px-3 py-1.5 rounded-lg border border-indigo-200 transition-colors duration-150"
+              className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0.5"
               title="Start rest timer"
             >
               <svg
@@ -109,7 +111,7 @@ export function ExerciseItem({
 
           <button
             onClick={() => onRemoveExercise(exerciseIndex)}
-            className="flex cursor-pointer items-center gap-1.5 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-600 px-3 py-1.5 rounded-lg border border-red-200 transition-colors duration-150"
+            className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-xl border border-rose-900/80 bg-rose-950/50 px-3 py-2 text-rose-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-900/50 active:translate-y-0.5"
             aria-label="Remove exercise"
           >
             ✕
@@ -128,7 +130,14 @@ export function ExerciseItem({
           </div>
 
           {exercise.sets.map((set, setIndex) => (
-            <div key={setIndex} className="grid grid-cols-5 gap-2">
+            <div
+              key={setIndex}
+              className={`grid grid-cols-5 gap-2 items-center ${
+                setIndex === animatedSetIndex
+                  ? "animate-row-in motion-reduce:animate-none"
+                  : ""
+              }`}
+            >
               <div>{setIndex + 1}</div>
               <button
                 onClick={() => {
@@ -145,7 +154,7 @@ export function ExerciseItem({
                     );
                   }
                 }}
-                className="flex cursor-pointer items-center w-fit gap-1.5 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-600 px-3 py-1.5 rounded-lg border border-blue-200 transition-colors duration-150"
+                className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0.5"
                 title="Use values from last workout"
               >
                 ↺
@@ -188,7 +197,7 @@ export function ExerciseItem({
               />
               <button
                 onClick={() => onRemoveSet(exerciseIndex, setIndex)}
-                className="flex cursor-pointer items-center w-fit gap-1.5 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-600 px-3 py-1.5 rounded-lg border border-red-200 transition-colors duration-150"
+                className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-xl border border-rose-900/80 bg-rose-950/50 px-3 py-2 text-rose-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-900/50 active:translate-y-0.5"
                 aria-label="Remove set"
               >
                 ✕
@@ -200,7 +209,7 @@ export function ExerciseItem({
 
           <button
             onClick={() => onAddSet(exerciseIndex)}
-            className="flex mx-auto items-center justify-around gap-1.5 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-600 px-3 py-1.5 rounded-lg border border-blue-200 transition-colors duration-150 w-full cursor-pointer"
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-sky-800 bg-sky-950/60 px-4 py-2.5 text-sky-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sky-900/70 active:translate-y-0.5"
           >
             <span className="flex items-center gap-3">
               <svg

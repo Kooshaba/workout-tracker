@@ -47,7 +47,10 @@ export function ExerciseHistory() {
   return (
     <div className="p-4 space-y-6 pb-20">
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="text-blue-500">
+        <button
+          onClick={() => navigate(-1)}
+          className="rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800/70 hover:text-slate-100 active:translate-y-0.5"
+        >
           ← Back
         </button>
         <h1 className="text-2xl font-bold">{name}</h1>
@@ -65,7 +68,7 @@ export function ExerciseHistory() {
                     {format(new Date(entry.date), "MMMM d, yyyy")}
                   </div>
                   <div
-                    className="text-sm text-blue-500 cursor-pointer"
+                    className="cursor-pointer text-sm text-sky-300 transition-colors hover:text-sky-100"
                     onClick={() => navigate(`/workout/${entry.workoutId}`)}
                   >
                     {entry.workoutName}

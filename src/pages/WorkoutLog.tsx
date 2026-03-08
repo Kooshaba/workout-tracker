@@ -104,13 +104,13 @@ export function WorkoutLog() {
           </div>
           <button
             onClick={startNewWorkout}
-            className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold"
+            className="w-full rounded-xl border border-sky-800 bg-sky-950/60 px-4 py-3 font-semibold text-sky-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sky-900/70 active:translate-y-0.5"
           >
             Start New Workout
           </button>
           <button
             onClick={() => setShowTemplates(true)}
-            className="w-full border border-blue-500 text-blue-500 py-3 rounded-lg font-semibold"
+            className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 font-semibold text-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0.5"
           >
             Use Template
           </button>
@@ -140,7 +140,7 @@ export function WorkoutLog() {
                 </div>
                 <button
                   onClick={() => setShowTemplates(false)}
-                  className="w-full py-2 text-gray-600"
+                  className="w-full rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800/70 hover:text-slate-100 active:translate-y-0.5"
                 >
                   Cancel
                 </button>
@@ -149,19 +149,19 @@ export function WorkoutLog() {
           )}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 animate-panel-in motion-reduce:animate-none">
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-bold">{currentWorkout.name}</h1>
             <div className="space-x-2">
               <button
                 onClick={cancelWorkout}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg"
+                className="rounded-xl border border-rose-900/80 bg-rose-950/50 px-4 py-2 font-semibold text-rose-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-900/50 active:translate-y-0.5"
               >
                 Cancel
               </button>
               <button
                 onClick={finishWorkout}
-                className="bg-green-500 text-white px-4 py-2 rounded-lg"
+                className="rounded-xl border border-emerald-900/80 bg-emerald-950/50 px-4 py-2 font-semibold text-emerald-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-900/50 active:translate-y-0.5"
               >
                 Finish
               </button>

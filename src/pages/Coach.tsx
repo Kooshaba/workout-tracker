@@ -242,7 +242,11 @@ export function Coach() {
           placeholder="e.g., I already did squats and bench. What should I add without overdoing fatigue?"
           className="w-full border rounded-lg px-3 py-2"
         />
-        <button onClick={askCoach} disabled={loading} className="bg-blue-500 text-white px-4 py-2 rounded-lg disabled:opacity-60">
+        <button
+          onClick={askCoach}
+          disabled={loading}
+          className="rounded-xl border border-sky-800 bg-sky-950/60 px-4 py-2 font-semibold text-sky-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sky-900/70 active:translate-y-0.5 disabled:opacity-60"
+        >
           {loading ? "Consulting Data..." : "Ask Data"}
         </button>
         {error && <p className="text-xs text-amber-600">{error}</p>}
@@ -260,7 +264,7 @@ export function Coach() {
                 {currentWorkout && (
                   <button
                     onClick={() => addRecommendation(rec)}
-                    className="mt-2 bg-green-500 text-white px-3 py-1.5 rounded-lg text-sm"
+                    className="mt-2 rounded-xl border border-emerald-900/80 bg-emerald-950/50 px-3 py-2 text-sm font-semibold text-emerald-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-900/50 active:translate-y-0.5"
                   >
                     Add to current workout
                   </button>

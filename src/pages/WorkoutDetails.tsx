@@ -29,7 +29,10 @@ export function WorkoutDetails() {
   return (
     <div className="p-4 space-y-6 pb-20">
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="text-blue-500">
+        <button
+          onClick={() => navigate(-1)}
+          className="rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800/70 hover:text-slate-100 active:translate-y-0.5"
+        >
           ← Back
         </button>
         <h1 className="text-2xl font-bold">{workout.name}</h1>
@@ -52,7 +55,7 @@ export function WorkoutDetails() {
           <div key={exercise.id} className="border rounded-lg p-4">
             <Link
               to={`/exercise/${encodeURIComponent(exercise.name)}`}
-              className="font-semibold text-lg mb-2 text-blue-500 hover:text-blue-700"
+              className="mb-2 text-lg font-semibold text-sky-300 transition-colors hover:text-sky-100"
             >
               {exercise.name}
             </Link>

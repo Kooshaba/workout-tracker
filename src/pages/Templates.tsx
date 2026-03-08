@@ -56,7 +56,7 @@ export function Templates() {
         <h1 className="text-2xl font-bold">Templates</h1>
         <button
           onClick={() => setShowWorkoutSelect(true)}
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+          className="rounded-xl border border-sky-800 bg-sky-950/60 px-4 py-2 font-semibold text-sky-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sky-900/70 active:translate-y-0.5"
         >
           Create Template
         </button>
@@ -79,7 +79,7 @@ export function Templates() {
             </div>
             <button
               onClick={() => setShowWorkoutSelect(false)}
-              className="w-full py-2 text-gray-600"
+              className="w-full rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800/70 hover:text-slate-100 active:translate-y-0.5"
             >
               Cancel
             </button>
@@ -103,13 +103,13 @@ export function Templates() {
               <div className="space-x-2">
                 <button
                   onClick={() => setEditingTemplate(template)}
-                  className="text-blue-500"
+                  className="text-sky-300 transition-colors hover:text-sky-100"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => deleteTemplate(template.id)}
-                  className="text-red-500"
+                  className="text-rose-300 transition-colors hover:text-rose-100"
                 >
                   Delete
                 </button>
