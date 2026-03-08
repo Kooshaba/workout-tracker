@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 type TimerState = {
   isOpen: boolean;
   isActive: boolean;
+  isExpired: boolean;
   exerciseName: string;
   duration: number;
   endAt: number | null;
@@ -13,6 +14,7 @@ type RestTimerContextValue = {
   remainingSeconds: number;
   isBlinking: boolean;
   openForExercise: (exerciseName: string) => void;
+  acknowledge: () => void;
   close: () => void;
   toggleStartPause: () => void;
   reset: () => void;
@@ -32,23 +34,26 @@ function readInitialState(): TimerState {
       return {
         isOpen: false,
         isActive: false,
+        isExpired: false,
         exerciseName: "",
         duration: DEFAULT_TIME,
         endAt: null,
       };
     }
     const parsed = JSON.parse(raw) as TimerState;
-    return {
-      isOpen: parsed.isOpen ?? false,
-      isActive: parsed.isActive ?? false,
-      exerciseName: parsed.exerciseName ?? "",
-      duration: parsed.duration ?? DEFAULT_TIME,
-      endAt: parsed.endAt ?? null,
+      return {
+        isOpen: parsed.isOpen ?? false,
+        isActive: parsed.isActive ?? false,
+        isExpired: parsed.isExpired ?? false,
+        exerciseName: parsed.exerciseName ?? "",
+        duration: parsed.duration ?? DEFAULT_TIME,
+        endAt: parsed.endAt ?? null,
     };
   } catch {
     return {
       isOpen: false,
       isActive: false,
+      isExpired: false,
       exerciseName: "",
       duration: DEFAULT_TIME,
       endAt: null,
@@ -95,25 +100,51 @@ export function RestTimerProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (state.isActive && remainingSeconds === 0) {
-      setState((prev) => ({ ...prev, isActive: false, endAt: null }));
+      setState((prev) => ({
+        ...prev,
+        isActive: false,
+        isExpired: true,
+        duration: 0,
+        endAt: null,
+      }));
     }
   }, [state.isActive, remainingSeconds]);
 
-  const isBlinking = remainingSeconds > 0 && remainingSeconds <= 5;
+  const isBlinking =
+    state.isExpired || (remainingSeconds > 0 && remainingSeconds <= 5);
 
   function openForExercise(exerciseName: string) {
     const seconds = readExerciseTime(exerciseName);
     setState({
       isOpen: true,
       isActive: false,
+      isExpired: false,
       exerciseName,
       duration: seconds,
       endAt: null,
     });
   }
 
+  function acknowledge() {
+    setState((prev) => ({
+      ...prev,
+      isOpen: false,
+      isActive: false,
+      isExpired: false,
+      exerciseName: "",
+      duration: DEFAULT_TIME,
+      endAt: null,
+    }));
+  }
+
   function close() {
-    setState((prev) => ({ ...prev, isOpen: false, isActive: false, endAt: null }));
+    setState((prev) => ({
+      ...prev,
+      isOpen: false,
+      isActive: false,
+      isExpired: false,
+      endAt: null,
+    }));
   }
 
   function toggleStartPause() {
@@ -121,26 +152,25 @@ export function RestTimerProvider({ children }: { children: React.ReactNode }) {
       if (!prev.exerciseName) return prev;
 
       if (!prev.isActive) {
-        saveExerciseTime(prev.exerciseName, remainingSeconds);
-        if (remainingSeconds <= 0) {
-          return {
-            ...prev,
-            isActive: true,
-            duration: prev.duration,
-            endAt: Date.now() + prev.duration * 1000,
-          };
-        }
+        const nextDuration =
+          prev.isExpired || remainingSeconds <= 0
+            ? readExerciseTime(prev.exerciseName)
+            : remainingSeconds;
+
+        saveExerciseTime(prev.exerciseName, nextDuration);
         return {
           ...prev,
           isActive: true,
-          duration: remainingSeconds,
-          endAt: Date.now() + remainingSeconds * 1000,
+          isExpired: false,
+          duration: nextDuration,
+          endAt: Date.now() + nextDuration * 1000,
         };
       }
 
       return {
         ...prev,
         isActive: false,
+        isExpired: false,
         duration: remainingSeconds,
         endAt: null,
       };
@@ -148,7 +178,13 @@ export function RestTimerProvider({ children }: { children: React.ReactNode }) {
   }
 
   function reset() {
-    setState((prev) => ({ ...prev, isActive: false, duration: DEFAULT_TIME, endAt: null }));
+    setState((prev) => ({
+      ...prev,
+      isActive: false,
+      isExpired: false,
+      duration: DEFAULT_TIME,
+      endAt: null,
+    }));
   }
 
   function adjustTime(deltaSeconds: number) {
@@ -156,9 +192,14 @@ export function RestTimerProvider({ children }: { children: React.ReactNode }) {
       const base = prev.isActive ? remainingSeconds : prev.duration;
       const next = Math.max(0, base + deltaSeconds);
       if (prev.isActive) {
-        return { ...prev, duration: next, endAt: Date.now() + next * 1000 };
+        return {
+          ...prev,
+          isExpired: false,
+          duration: next,
+          endAt: Date.now() + next * 1000,
+        };
       }
-      return { ...prev, duration: next };
+      return { ...prev, isExpired: false, duration: next };
     });
   }
 
@@ -167,6 +208,7 @@ export function RestTimerProvider({ children }: { children: React.ReactNode }) {
     remainingSeconds,
     isBlinking,
     openForExercise,
+    acknowledge,
     close,
     toggleStartPause,
     reset,
