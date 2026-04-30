@@ -19,12 +19,12 @@ type WindowWithWebkitAudioContext = Window & {
 };
 
 let audioContext: AudioContext | null = null;
+let restCompleteAudioElement: HTMLAudioElement | null = null;
 let restCompleteSoundPromise: Promise<AudioBuffer | null> | null = null;
-let hasUnlockedAudio = false;
 
 // Source: Wikimedia Commons, "Bicycle-bell-1.wav", CC0 1.0.
 // https://commons.wikimedia.org/wiki/File:Bicycle-bell-1.wav
-const REST_COMPLETE_VOLUME = 0.45;
+const REST_COMPLETE_VOLUME = 0.85;
 
 function getAudioContext() {
   if (audioContext) return audioContext;
@@ -63,33 +63,48 @@ function loadRestCompleteSound(context: AudioContext) {
   return restCompleteSoundPromise;
 }
 
-export function unlockRestTimerAudio() {
-  setTransientAudioSession();
+function getRestCompleteAudioElement() {
+  if (restCompleteAudioElement) return restCompleteAudioElement;
 
-  const context = getAudioContext();
-  if (!context) return;
-
-  if (context.state === "suspended") {
-    void context.resume();
-  }
-
-  void loadRestCompleteSound(context);
-  hasUnlockedAudio = true;
+  restCompleteAudioElement = new Audio(restCompleteBellUrl);
+  restCompleteAudioElement.preload = "auto";
+  restCompleteAudioElement.volume = REST_COMPLETE_VOLUME;
+  return restCompleteAudioElement;
 }
 
-export function playRestTimerDoneSound() {
-  setTransientAudioSession();
+async function resumeAudioContext(context: AudioContext) {
+  if (context.state !== "suspended") return true;
 
-  const context = getAudioContext();
-  if (!context || !hasUnlockedAudio) return;
-
-  if (context.state === "suspended") {
-    void context.resume();
+  try {
+    await context.resume();
+    return context.state !== "suspended";
+  } catch {
+    return false;
   }
+}
 
-  void loadRestCompleteSound(context).then((buffer) => {
-    if (!buffer) return;
+function primeAudioContext(context: AudioContext) {
+  try {
+    const source = context.createBufferSource();
+    const gain = context.createGain();
 
+    source.buffer = context.createBuffer(1, 1, context.sampleRate);
+    gain.gain.value = 0;
+    source.connect(gain);
+    gain.connect(context.destination);
+    source.start();
+
+    source.addEventListener("ended", () => {
+      source.disconnect();
+      gain.disconnect();
+    });
+  } catch {
+    // The later playback fallbacks will handle browsers that reject priming.
+  }
+}
+
+function playAudioBuffer(context: AudioContext, buffer: AudioBuffer) {
+  try {
     const source = context.createBufferSource();
     const gain = context.createGain();
 
@@ -103,5 +118,93 @@ export function playRestTimerDoneSound() {
       source.disconnect();
       gain.disconnect();
     });
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function playGeneratedFallback(context: AudioContext) {
+  try {
+    const now = context.currentTime;
+    const frequencies = [880, 1174.66, 1567.98];
+
+    frequencies.forEach((frequency, index) => {
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      const startAt = now + index * 0.12;
+      const stopAt = startAt + 0.12;
+
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(frequency, startAt);
+      gain.gain.setValueAtTime(0.0001, startAt);
+      gain.gain.exponentialRampToValueAtTime(0.18, startAt + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, stopAt);
+
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start(startAt);
+      oscillator.stop(stopAt);
+
+      oscillator.addEventListener("ended", () => {
+        oscillator.disconnect();
+        gain.disconnect();
+      });
+    });
+  } catch {
+    // At this point the browser is refusing audio playback entirely.
+  }
+}
+
+function playHtmlAudioFallback() {
+  try {
+    const audio = getRestCompleteAudioElement();
+    audio.currentTime = 0;
+    audio.volume = REST_COMPLETE_VOLUME;
+    return audio.play();
+  } catch {
+    return Promise.reject();
+  }
+}
+
+export function unlockRestTimerAudio() {
+  setTransientAudioSession();
+
+  const context = getAudioContext();
+  const audio = getRestCompleteAudioElement();
+  audio.load();
+
+  if (!context) {
+    return;
+  }
+
+  void resumeAudioContext(context).then((canUseWebAudio) => {
+    if (canUseWebAudio) {
+      primeAudioContext(context);
+    }
   });
+  void loadRestCompleteSound(context);
+}
+
+export function playRestTimerDoneSound() {
+  setTransientAudioSession();
+
+  const context = getAudioContext();
+  if (!context) {
+    void playHtmlAudioFallback().catch(() => {});
+    return;
+  }
+
+  void resumeAudioContext(context).then((canUseWebAudio) =>
+    loadRestCompleteSound(context).then((buffer) => {
+      if (canUseWebAudio && buffer && playAudioBuffer(context, buffer)) return;
+
+      void playHtmlAudioFallback().catch(() => {
+        if (canUseWebAudio) {
+          playGeneratedFallback(context);
+        }
+      });
+    })
+  );
 }
