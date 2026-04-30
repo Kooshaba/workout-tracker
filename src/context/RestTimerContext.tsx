@@ -17,6 +17,7 @@ type RestTimerContextValue = {
   acknowledge: () => void;
   close: () => void;
   toggleStartPause: () => void;
+  restart: () => void;
   reset: () => void;
   adjustTime: (deltaSeconds: number) => void;
 };
@@ -41,13 +42,13 @@ function readInitialState(): TimerState {
       };
     }
     const parsed = JSON.parse(raw) as TimerState;
-      return {
-        isOpen: parsed.isOpen ?? false,
-        isActive: parsed.isActive ?? false,
-        isExpired: parsed.isExpired ?? false,
-        exerciseName: parsed.exerciseName ?? "",
-        duration: parsed.duration ?? DEFAULT_TIME,
-        endAt: parsed.endAt ?? null,
+    return {
+      isOpen: parsed.isOpen ?? false,
+      isActive: parsed.isActive ?? false,
+      isExpired: parsed.isExpired ?? false,
+      exerciseName: parsed.exerciseName ?? "",
+      duration: parsed.duration ?? DEFAULT_TIME,
+      endAt: parsed.endAt ?? null,
     };
   } catch {
     return {
@@ -117,11 +118,11 @@ export function RestTimerProvider({ children }: { children: React.ReactNode }) {
     const seconds = readExerciseTime(exerciseName);
     setState({
       isOpen: true,
-      isActive: false,
+      isActive: true,
       isExpired: false,
       exerciseName,
       duration: seconds,
-      endAt: null,
+      endAt: Date.now() + seconds * 1000,
     });
   }
 
@@ -147,6 +148,23 @@ export function RestTimerProvider({ children }: { children: React.ReactNode }) {
     }));
   }
 
+  function restart() {
+    setState((prev) => {
+      const nextDuration = prev.exerciseName
+        ? readExerciseTime(prev.exerciseName)
+        : DEFAULT_TIME;
+
+      return {
+        ...prev,
+        isOpen: true,
+        isActive: true,
+        isExpired: false,
+        duration: nextDuration,
+        endAt: Date.now() + nextDuration * 1000,
+      };
+    });
+  }
+
   function toggleStartPause() {
     setState((prev) => {
       if (!prev.exerciseName) return prev;
@@ -157,7 +175,6 @@ export function RestTimerProvider({ children }: { children: React.ReactNode }) {
             ? readExerciseTime(prev.exerciseName)
             : remainingSeconds;
 
-        saveExerciseTime(prev.exerciseName, nextDuration);
         return {
           ...prev,
           isActive: true,
@@ -178,19 +195,42 @@ export function RestTimerProvider({ children }: { children: React.ReactNode }) {
   }
 
   function reset() {
-    setState((prev) => ({
-      ...prev,
-      isActive: false,
-      isExpired: false,
-      duration: DEFAULT_TIME,
-      endAt: null,
-    }));
+    setState((prev) => {
+      const nextDuration = prev.exerciseName
+        ? readExerciseTime(prev.exerciseName)
+        : DEFAULT_TIME;
+
+      return {
+        ...prev,
+        isActive: false,
+        isExpired: false,
+        duration: nextDuration,
+        endAt: null,
+      };
+    });
   }
 
   function adjustTime(deltaSeconds: number) {
     setState((prev) => {
       const base = prev.isActive ? remainingSeconds : prev.duration;
-      const next = Math.max(0, base + deltaSeconds);
+      const next = prev.isActive
+        ? Math.max(0, base + deltaSeconds)
+        : Math.max(15, base + deltaSeconds);
+
+      if (!prev.isActive && prev.exerciseName) {
+        saveExerciseTime(prev.exerciseName, next);
+      }
+
+      if (prev.isActive && next === 0) {
+        return {
+          ...prev,
+          isActive: false,
+          isExpired: true,
+          duration: 0,
+          endAt: null,
+        };
+      }
+
       if (prev.isActive) {
         return {
           ...prev,
@@ -211,6 +251,7 @@ export function RestTimerProvider({ children }: { children: React.ReactNode }) {
     acknowledge,
     close,
     toggleStartPause,
+    restart,
     reset,
     adjustTime,
   };

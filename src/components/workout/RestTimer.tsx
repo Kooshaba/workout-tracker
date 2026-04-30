@@ -1,4 +1,16 @@
+import { useEffect } from "react";
 import { useRestTimer } from "../../context/RestTimerContext";
+
+const RING_SIZE = 96;
+const RING_STROKE = 8;
+const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+function formatTime(totalSeconds: number) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
 
 export function RestTimer() {
   const {
@@ -8,110 +20,204 @@ export function RestTimer() {
     acknowledge,
     close,
     toggleStartPause,
+    restart,
     reset,
     adjustTime,
   } = useRestTimer();
 
+  useEffect(() => {
+    if (state.isExpired && "vibrate" in navigator) {
+      navigator.vibrate([160, 80, 160]);
+    }
+  }, [state.isExpired]);
+
   if (!state.isOpen) return null;
 
   const progress = state.duration > 0 ? (remainingSeconds / state.duration) * 100 : 0;
+  const clampedProgress = Math.max(0, Math.min(100, progress));
+  const strokeDashoffset =
+    RING_CIRCUMFERENCE * (1 - clampedProgress / 100);
   const isExpired = state.isExpired;
+  const statusLabel = isExpired
+    ? "Rest complete"
+    : state.isActive
+      ? "Resting"
+      : "Paused";
+  const helperText = isExpired
+    ? "Nice work. Start another rest or get back to the next set."
+    : state.isActive
+      ? "Tap the time or Pause when you are ready early."
+      : "Adjust time here to save it for this exercise.";
+  const primaryActionLabel = isExpired
+    ? "Start another"
+    : state.isActive
+      ? "Pause"
+      : "Resume";
 
   return (
-    <div
-      className={`fixed bottom-24 left-0 right-0 bg-white shadow-lg p-1 z-50 transition-colors duration-100 ${
-        isExpired ? "border-y border-red-500/60 bg-red-950/60 animate-blink" : ""
-      }`}
-    >
-      <div className="max-w-3xl mx-auto">
-        <div className="w-full h-1 bg-gray-200 rounded-full mb-1">
-          <div
-            className={`h-full transition-all duration-200 ease-linear rounded-full ${
-              isBlinking ? "bg-red-500" : "bg-blue-500"
+    <div className="pointer-events-none fixed inset-x-0 bottom-24 z-50 px-4">
+      <section
+        className={`pointer-events-auto mx-auto w-full max-w-md overflow-hidden rounded-[2rem] border p-4 shadow-2xl backdrop-blur transition-all duration-300 ${
+          isExpired
+            ? "border-emerald-300/50 bg-emerald-950/95 text-emerald-50"
+            : "border-slate-700/80 bg-slate-950/95 text-slate-50"
+        }`}
+        aria-label="Rest timer"
+      >
+        <div className="flex items-center gap-4">
+          <button
+            onClick={isExpired ? restart : toggleStartPause}
+            className={`relative grid h-24 w-24 shrink-0 place-items-center rounded-full transition-all duration-200 hover:scale-[1.02] active:scale-95 ${
+              isExpired ? "bg-emerald-900/70" : "bg-slate-900"
             }`}
-            style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
-          />
-        </div>
-
-        <div className="flex items-center justify-between gap-1">
-          <div className="min-w-[90px] text-center">
-            <div
-              className={`text-[1.6rem] font-bold leading-none ${
-                isExpired ? "text-red-200" : ""
-              }`}
+            aria-label={primaryActionLabel}
+          >
+            <svg
+              width={RING_SIZE}
+              height={RING_SIZE}
+              viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}
+              className="-rotate-90"
             >
-              {Math.floor(remainingSeconds / 60)}:
-              {(remainingSeconds % 60).toString().padStart(2, "0")}
-            </div>
-            <div
-              className={`text-[10px] truncate max-w-[90px] ${
-                isExpired ? "text-red-200" : "text-gray-500"
-              }`}
-            >
-              {isExpired ? "Timer done" : state.exerciseName || "Rest"}
-            </div>
-          </div>
+              <circle
+                cx={RING_SIZE / 2}
+                cy={RING_SIZE / 2}
+                r={RING_RADIUS}
+                fill="transparent"
+                strokeWidth={RING_STROKE}
+                className={isExpired ? "stroke-emerald-800" : "stroke-slate-800"}
+              />
+              <circle
+                cx={RING_SIZE / 2}
+                cy={RING_SIZE / 2}
+                r={RING_RADIUS}
+                fill="transparent"
+                strokeLinecap="round"
+                strokeWidth={RING_STROKE}
+                strokeDasharray={`${RING_CIRCUMFERENCE} ${RING_CIRCUMFERENCE}`}
+                strokeDashoffset={strokeDashoffset}
+                className={`transition-all duration-300 ease-linear ${
+                  isExpired
+                    ? "stroke-emerald-300"
+                    : isBlinking
+                      ? "stroke-amber-300"
+                      : "stroke-sky-300"
+                }`}
+              />
+            </svg>
+            <span className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-2xl font-black tabular-nums leading-none tracking-tight">
+                {formatTime(remainingSeconds)}
+              </span>
+              <span
+                className={`mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
+                  isExpired ? "text-emerald-100/70" : "text-slate-400"
+                }`}
+              >
+                {isExpired
+                  ? "Done"
+                  : state.isActive
+                    ? "Tap pause"
+                    : "Tap start"}
+              </span>
+            </span>
+          </button>
 
-          <div className="flex items-center gap-1">
-            {isExpired ? (
-              <>
-                <button
-                  onClick={reset}
-                  className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm font-medium text-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0.5 touch-manipulation"
-                  title="Reset to saved rest time"
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p
+                  className={`text-xs font-semibold uppercase tracking-[0.2em] ${
+                    isExpired ? "text-emerald-200" : "text-sky-200"
+                  }`}
+                  aria-live={isExpired ? "assertive" : "polite"}
                 >
-                  Reset
+                  {statusLabel}
+                </p>
+                <h2 className="mt-1 truncate text-lg font-bold">
+                  {state.exerciseName || "Rest"}
+                </h2>
+              </div>
+              <button
+                onClick={isExpired ? acknowledge : close}
+                className={`rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold transition-all duration-200 hover:bg-white/10 hover:text-white active:scale-95 ${
+                  isExpired ? "text-emerald-100/80" : "text-slate-300"
+                }`}
+                aria-label="Close timer"
+              >
+                Close
+              </button>
+            </div>
+
+            <p
+              className={`mt-2 text-sm leading-snug ${
+                isExpired ? "text-emerald-100/80" : "text-slate-300"
+              }`}
+            >
+              {helperText}
+            </p>
+
+            {isExpired ? (
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <button
+                  onClick={restart}
+                  className="rounded-2xl border border-emerald-200/30 bg-emerald-300 px-4 py-3 text-sm font-bold text-emerald-950 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-200 active:translate-y-0"
+                >
+                  Start another
                 </button>
                 <button
                   onClick={acknowledge}
-                  className="rounded-xl border border-red-400 bg-red-500 px-4 py-1.5 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-red-400 active:translate-y-0.5 touch-manipulation"
+                  className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-semibold text-emerald-50 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/15 active:translate-y-0"
                 >
-                  Acknowledge
+                  Done
                 </button>
-              </>
+              </div>
             ) : (
               <>
-                <button
-                  onClick={() => adjustTime(-30)}
-                  className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm font-medium text-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0.5 touch-manipulation"
-                >
-                  -30s
-                </button>
-                <button
-                  onClick={() => adjustTime(30)}
-                  className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm font-medium text-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0.5 touch-manipulation"
-                >
-                  +30s
-                </button>
-                <button
-                  onClick={reset}
-                  className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm font-medium text-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0.5 touch-manipulation"
-                  title="Reset to 90s"
-                >
-                  ↺
-                </button>
-                <button
-                  onClick={toggleStartPause}
-                  className={`rounded-xl border px-4 py-1.5 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0.5 touch-manipulation ${
-                    state.isActive
-                      ? "border-rose-900/80 bg-rose-950/50 text-rose-100 hover:bg-rose-900/50"
-                      : "border-sky-800 bg-sky-950/60 text-sky-100 hover:bg-sky-900/70"
-                  }`}
-                >
-                  {state.isActive ? "Pause" : "Start"}
-                </button>
-                <button
-                  onClick={close}
-                  className="rounded-xl border border-slate-700 px-3 py-1.5 text-sm font-medium text-slate-300 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800/70 hover:text-slate-100 active:translate-y-0.5 touch-manipulation"
-                  aria-label="Close timer"
-                >
-                  ✕
-                </button>
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => adjustTime(-15)}
+                    className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-semibold text-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/10 active:translate-y-0"
+                  >
+                    -15s
+                  </button>
+                  <button
+                    onClick={() => adjustTime(15)}
+                    className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-semibold text-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/10 active:translate-y-0"
+                  >
+                    +15s
+                  </button>
+                  <button
+                    onClick={() => adjustTime(30)}
+                    className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-semibold text-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/10 active:translate-y-0"
+                  >
+                    +30s
+                  </button>
+                </div>
+
+                <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
+                  <button
+                    onClick={toggleStartPause}
+                    className={`rounded-2xl border px-4 py-3 text-sm font-bold transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 ${
+                      state.isActive
+                        ? "border-rose-200/30 bg-rose-400 text-rose-950 hover:bg-rose-300"
+                        : "border-sky-200/30 bg-sky-300 text-sky-950 hover:bg-sky-200"
+                    }`}
+                  >
+                    {primaryActionLabel}
+                  </button>
+                  <button
+                    onClick={reset}
+                    className="rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold text-slate-200 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/10 active:translate-y-0"
+                    title="Reset to saved rest time"
+                  >
+                    Reset
+                  </button>
+                </div>
               </>
             )}
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
