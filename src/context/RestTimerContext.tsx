@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { unlockRestTimerAudio } from "../utils/restTimerAudio";
 
 type TimerState = {
   isOpen: boolean;
@@ -115,6 +116,8 @@ export function RestTimerProvider({ children }: { children: React.ReactNode }) {
     state.isExpired || (remainingSeconds > 0 && remainingSeconds <= 5);
 
   function openForExercise(exerciseName: string) {
+    unlockRestTimerAudio();
+
     const seconds = readExerciseTime(exerciseName);
     setState({
       isOpen: true,
@@ -149,6 +152,8 @@ export function RestTimerProvider({ children }: { children: React.ReactNode }) {
   }
 
   function restart() {
+    unlockRestTimerAudio();
+
     setState((prev) => {
       const nextDuration = prev.exerciseName
         ? readExerciseTime(prev.exerciseName)
@@ -170,6 +175,8 @@ export function RestTimerProvider({ children }: { children: React.ReactNode }) {
       if (!prev.exerciseName) return prev;
 
       if (!prev.isActive) {
+        unlockRestTimerAudio();
+
         const nextDuration =
           prev.isExpired || remainingSeconds <= 0
             ? readExerciseTime(prev.exerciseName)

@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRestTimer } from "../../context/RestTimerContext";
+import { playRestTimerDoneSound } from "../../utils/restTimerAudio";
 
 const RING_SIZE = 96;
 const RING_STROKE = 8;
@@ -24,9 +25,17 @@ export function RestTimer() {
     reset,
     adjustTime,
   } = useRestTimer();
+  const wasExpiredRef = useRef(state.isExpired);
 
   useEffect(() => {
-    if (state.isExpired && "vibrate" in navigator) {
+    if (!state.isExpired || wasExpiredRef.current) {
+      wasExpiredRef.current = state.isExpired;
+      return;
+    }
+
+    playRestTimerDoneSound();
+
+    if ("vibrate" in navigator) {
       navigator.vibrate([160, 80, 160]);
     }
   }, [state.isExpired]);
