@@ -223,6 +223,7 @@ export function Coach() {
           onChange={(e) => setModel(e.target.value)}
           className="w-full border rounded-lg px-3 py-2"
         >
+          <option value="gpt-5.5">gpt-5.5</option>
           <option value="gpt-4o-mini">gpt-4o-mini</option>
           <option value="gpt-4o">gpt-4o</option>
           <option value="gpt-4.1-mini">gpt-4.1-mini</option>
