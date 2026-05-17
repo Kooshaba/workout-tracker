@@ -9,9 +9,12 @@ import {
 } from "../types/workout";
 import { ExerciseForm } from "../components/workout/ExerciseForm";
 import { ExerciseList } from "../components/workout/ExerciseList";
+import { useI18n } from "../i18nContext";
+import { format } from "date-fns";
 // Rest timer is rendered globally in App
 
 export function WorkoutLog() {
+  const { t, dateLocale } = useI18n();
   const [currentWorkout, setCurrentWorkout] = useLocalStorage<Workout | null>(
     "currentWorkout",
     null
@@ -43,7 +46,9 @@ export function WorkoutLog() {
     setCurrentWorkout({
       id: Date.now().toString(),
       date: workoutDate.toISOString(),
-      name: "Workout " + workoutDate.toLocaleDateString(),
+      name: `${t("workout.namePrefix")} ${format(workoutDate, "P", {
+        locale: dateLocale,
+      })}`,
       exercises: [],
       notes: "",
     });
@@ -90,11 +95,7 @@ export function WorkoutLog() {
   };
 
   const cancelWorkout = () => {
-    if (
-      window.confirm(
-        "Are you sure you want to cancel this workout? All progress will be lost."
-      )
-    ) {
+    if (window.confirm(t("workout.cancelConfirm"))) {
       setCurrentWorkout(null);
     }
   };
@@ -108,7 +109,7 @@ export function WorkoutLog() {
               htmlFor="workout-date"
               className="block text-sm font-medium text-gray-700"
             >
-              Workout Date
+              {t("workout.date")}
             </label>
             <input
               type="date"
@@ -122,19 +123,19 @@ export function WorkoutLog() {
             onClick={startNewWorkout}
             className="w-full rounded-xl border border-sky-800 bg-sky-950/60 px-4 py-3 font-semibold text-sky-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sky-900/70 active:translate-y-0.5"
           >
-            Start New Workout
+            {t("workout.startNew")}
           </button>
           <button
             onClick={() => setShowTemplates(true)}
             className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 font-semibold text-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0.5"
           >
-            Use Template
+            {t("workout.useTemplate")}
           </button>
 
           {showTemplates && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-lg p-6 max-w-sm w-full space-y-4">
-                <h2 className="font-semibold">Select Template</h2>
+                <h2 className="font-semibold">{t("workout.selectTemplate")}</h2>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {JSON.parse(
                     localStorage.getItem("workoutTemplates") || "[]"
@@ -146,7 +147,9 @@ export function WorkoutLog() {
                     >
                       <div className="font-medium">{template.name}</div>
                       <div className="text-sm text-gray-600">
-                        {template.exercises.length} exercises
+                        {t("common.exerciseCount", {
+                          count: template.exercises.length,
+                        })}
                       </div>
                       <div className="text-sm text-gray-500">
                         {template.exercises.map((e) => e.name).join(", ")}
@@ -158,7 +161,7 @@ export function WorkoutLog() {
                   onClick={() => setShowTemplates(false)}
                   className="w-full rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800/70 hover:text-slate-100 active:translate-y-0.5"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
               </div>
             </div>
@@ -179,13 +182,13 @@ export function WorkoutLog() {
                 onClick={cancelWorkout}
                 className="rounded-xl border border-rose-900/80 bg-rose-950/50 px-4 py-2 font-semibold text-rose-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-900/50 active:translate-y-0.5"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 onClick={finishWorkout}
                 className="rounded-xl border border-emerald-900/80 bg-emerald-950/50 px-4 py-2 font-semibold text-emerald-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-900/50 active:translate-y-0.5"
               >
-                Finish
+                {t("common.finish")}
               </button>
             </div>
           </div>
@@ -195,13 +198,13 @@ export function WorkoutLog() {
               htmlFor="workout-notes"
               className="block text-sm font-medium text-gray-700"
             >
-              Workout Notes
+              {t("workout.notes")}
             </label>
             <textarea
               id="workout-notes"
               rows={3}
               className="w-full border rounded-lg px-3 py-2"
-              placeholder="Add notes about this workout..."
+              placeholder={t("workout.notesPlaceholder")}
               value={currentWorkout.notes || ""}
               onChange={(e) => {
                 setCurrentWorkout({

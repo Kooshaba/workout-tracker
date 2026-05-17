@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { WorkoutTemplate } from "../../types/workout";
+import { useI18n } from "../../i18nContext";
 
 type Props = {
   template: WorkoutTemplate;
@@ -8,6 +9,7 @@ type Props = {
 };
 
 export function TemplateEditor({ template, onSave, onCancel }: Props) {
+  const { t } = useI18n();
   const [name, setName] = useState(template.name);
   const [exercises, setExercises] = useState(template.exercises);
 
@@ -31,10 +33,10 @@ export function TemplateEditor({ template, onSave, onCancel }: Props) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg p-6 max-w-sm w-full space-y-4">
-        <h2 className="font-semibold">Edit Template</h2>
+        <h2 className="font-semibold">{t("templates.editTitle")}</h2>
         <div>
           <label className="block text-sm font-medium mb-1">
-            Template Name
+            {t("templates.name")}
           </label>
           <input
             type="text"
@@ -45,7 +47,9 @@ export function TemplateEditor({ template, onSave, onCancel }: Props) {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium">Exercises</label>
+          <label className="block text-sm font-medium">
+            {t("common.exercises")}
+          </label>
           {exercises.map((exercise, index) => (
             <div
               key={exercise.id}
@@ -54,14 +58,14 @@ export function TemplateEditor({ template, onSave, onCancel }: Props) {
               <div>
                 <div className="font-medium">{exercise.name}</div>
                 <div className="text-sm text-gray-500 capitalize">
-                  {exercise.type}
+                  {t(`exerciseType.${exercise.type}`)}
                 </div>
               </div>
               <button
                 onClick={() => removeExercise(index)}
                 className="text-rose-300 transition-colors hover:text-rose-100"
               >
-                Remove
+                {t("common.remove")}
               </button>
             </div>
           ))}
@@ -72,13 +76,13 @@ export function TemplateEditor({ template, onSave, onCancel }: Props) {
             onClick={onCancel}
             className="rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800/70 hover:text-slate-100 active:translate-y-0.5"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             onClick={handleSave}
             className="rounded-xl border border-sky-800 bg-sky-950/60 px-4 py-2 font-semibold text-sky-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sky-900/70 active:translate-y-0.5"
           >
-            Save Template
+            {t("templates.save")}
           </button>
         </div>
       </div>

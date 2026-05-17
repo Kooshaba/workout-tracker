@@ -1,15 +1,17 @@
 import { Link, useLocation } from "react-router-dom";
+import { useI18n } from "../i18nContext";
 
 export function Navigation() {
   const location = useLocation();
+  const { t } = useI18n();
 
   const navItems = [
-    { path: "/", label: "Home", icon: "🏠" },
-    { path: "/workout", label: "Workout", icon: "💪" },
-    { path: "/progress", label: "Progress", icon: "📈" },
-    { path: "/templates", label: "Templates", icon: "📋" },
-    { path: "/calendar", label: "Calendar", icon: "📅" },
-    { path: "/coach", label: "Coach", icon: "🧠" },
+    { path: "/", label: t("nav.home"), icon: "🏠" },
+    { path: "/workout", label: t("nav.workout"), icon: "💪" },
+    { path: "/progress", label: t("nav.progress"), icon: "📈" },
+    { path: "/templates", label: t("nav.templates"), icon: "📋" },
+    { path: "/calendar", label: t("nav.calendar"), icon: "📅" },
+    { path: "/coach", label: t("nav.coach"), icon: "🧠" },
   ];
 
   return (

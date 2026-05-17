@@ -28,8 +28,18 @@
   </head>
   <body>
     <div class="container">
-      <h1>You're Offline</h1>
-      <p>Please check your internet connection and try again.</p>
+      <h1 id="title">You're Offline</h1>
+      <p id="message">Please check your internet connection and try again.</p>
     </div>
+    <script>
+      const language = localStorage.getItem("preferredLanguage");
+      if (language === "ja") {
+        document.documentElement.lang = "ja";
+        document.title = "オフライン - ワークアウトトラッカー";
+        document.getElementById("title").textContent = "オフラインです";
+        document.getElementById("message").textContent =
+          "インターネット接続を確認して、もう一度お試しください。";
+      }
+    </script>
   </body>
 </html>

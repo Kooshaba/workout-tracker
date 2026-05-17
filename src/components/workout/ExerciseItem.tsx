@@ -5,6 +5,7 @@ import {
 } from "../../types/workout";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "../../i18nContext";
 
 type Props = {
   exercise: WorkoutExercise;
@@ -42,6 +43,7 @@ export function ExerciseItem({
   animateIn,
   animatedSetIndex,
 }: Props) {
+  const { t } = useI18n();
   const lastSetRef = useRef<HTMLInputElement>(null);
   const [isExerciseVisible, setIsExerciseVisible] = useState(!animateIn);
   const [visibleAnimatedSetIndex, setVisibleAnimatedSetIndex] = useState<
@@ -101,7 +103,7 @@ export function ExerciseItem({
             <Link
               to={`/exercise/${encodeURIComponent(exercise.name)}`}
               className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-emerald-900/80 bg-emerald-950/50 px-3 py-2 text-emerald-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-900/50 active:translate-y-0.5"
-              title="View exercise history"
+              title={t("exercise.historyTitle")}
             >
               <svg
                 width="16"
@@ -123,7 +125,7 @@ export function ExerciseItem({
             <button
               onClick={() => onTimerStart(exercise.name)}
               className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0.5"
-              title="Start rest timer"
+              title={t("exercise.restTitle")}
             >
               <svg
                 width="16"
@@ -141,7 +143,7 @@ export function ExerciseItem({
                   strokeLinejoin="round"
                 />
               </svg>
-              Rest
+              {t("exercise.rest")}
             </button>
           </div>
 
@@ -150,7 +152,7 @@ export function ExerciseItem({
           <button
             onClick={() => onRemoveExercise(exerciseIndex)}
             className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-xl border border-rose-900/80 bg-rose-950/50 px-3 py-2 text-rose-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-900/50 active:translate-y-0.5"
-            aria-label="Remove exercise"
+            aria-label={t("exercise.removeExerciseLabel")}
           >
             ✕
           </button>
@@ -160,10 +162,10 @@ export function ExerciseItem({
       {isStrengthExercise(exercise) && (
         <div className="space-y-2">
           <div className="grid grid-cols-5 gap-2 text-sm font-medium">
-            <div>Set</div>
+            <div>{t("common.set")}</div>
             <div></div>
-            <div>Weight</div>
-            <div>Reps</div>
+            <div>{t("common.weight")}</div>
+            <div>{t("common.reps")}</div>
             <div></div>
           </div>
 
@@ -195,7 +197,7 @@ export function ExerciseItem({
                   }
                 }}
                 className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0.5"
-                title="Use values from last workout"
+                title={t("exercise.useLastTitle")}
               >
                 ↺
               </button>
@@ -238,7 +240,7 @@ export function ExerciseItem({
               <button
                 onClick={() => onRemoveSet(exerciseIndex, setIndex)}
                 className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-xl border border-rose-900/80 bg-rose-950/50 px-3 py-2 text-rose-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-900/50 active:translate-y-0.5"
-                aria-label="Remove set"
+                aria-label={t("exercise.removeSetLabel")}
               >
                 ✕
               </button>
@@ -268,7 +270,7 @@ export function ExerciseItem({
                   strokeLinejoin="round"
                 />
               </svg>
-              Add Set
+              {t("exercise.addSet")}
             </span>
           </button>
         </div>
@@ -282,7 +284,7 @@ export function ExerciseItem({
                 htmlFor={`duration-${exercise.id}`}
                 className="block text-sm font-medium mb-1"
               >
-                Duration
+                {t("common.duration")}
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <div className="relative">
@@ -341,7 +343,7 @@ export function ExerciseItem({
                 htmlFor={`distance-${exercise.id}`}
                 className="block text-sm font-medium mb-1"
               >
-                Distance
+                {t("common.distance")}
               </label>
               <div className="relative">
                 <input
@@ -367,7 +369,9 @@ export function ExerciseItem({
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Pace</label>
+              <label className="block text-sm font-medium mb-1">
+                {t("common.pace")}
+              </label>
               <div className="border rounded px-2 py-1 bg-gray-50">
                 {exercise.sets.duration && exercise.sets.distance
                   ? (exercise.sets.duration / exercise.sets.distance).toFixed(2)
@@ -385,13 +389,13 @@ export function ExerciseItem({
           htmlFor={`exercise-notes-${exercise.id}`}
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          Exercise Notes
+          {t("exercise.notes")}
         </label>
         <textarea
           id={`exercise-notes-${exercise.id}`}
           rows={2}
           className="w-full border rounded-lg px-3 py-2"
-          placeholder="Add notes about this exercise..."
+          placeholder={t("exercise.notesPlaceholder")}
           value={exercise.notes || ""}
           onChange={(e) => onUpdateNotes(exerciseIndex, e.target.value)}
         />

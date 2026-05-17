@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { format } from "date-fns";
 import { Workout } from "../types/workout";
+import { useI18n } from "../i18nContext";
 
 export function WorkoutDetails() {
+  const { t, dateLocale } = useI18n();
   const { id } = useParams();
   const navigate = useNavigate();
   const [workout, setWorkout] = useState<Workout | null>(null);
@@ -21,7 +23,7 @@ export function WorkoutDetails() {
   if (!workout) {
     return (
       <div className="p-4">
-        <div className="text-center text-gray-500">Workout not found</div>
+        <div className="text-center text-gray-500">{t("details.notFound")}</div>
       </div>
     );
   }
@@ -33,19 +35,21 @@ export function WorkoutDetails() {
           onClick={() => navigate(-1)}
           className="rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800/70 hover:text-slate-100 active:translate-y-0.5"
         >
-          ← Back
+          ← {t("common.back")}
         </button>
         <h1 className="text-2xl font-bold">{workout.name}</h1>
       </div>
 
       <div className="text-gray-500">
-        {format(new Date(workout.date), "MMMM d, yyyy 'at' h:mm a")}
+        {format(new Date(workout.date), "PPpp", { locale: dateLocale })}
       </div>
 
       {/* Display workout notes if they exist */}
       {workout.notes && workout.notes.trim() !== "" && (
         <div className="border rounded-lg p-4 bg-gray-50">
-          <h2 className="font-medium text-gray-700 mb-2">Notes</h2>
+          <h2 className="font-medium text-gray-700 mb-2">
+            {t("common.notes")}
+          </h2>
           <p className="whitespace-pre-wrap">{workout.notes}</p>
         </div>
       )}
@@ -64,9 +68,9 @@ export function WorkoutDetails() {
               // Strength exercise
               <div className="space-y-2">
                 <div className="grid grid-cols-3 gap-2 text-sm font-medium">
-                  <div>Set</div>
-                  <div>Weight</div>
-                  <div>Reps</div>
+                  <div>{t("common.set")}</div>
+                  <div>{t("common.weight")}</div>
+                  <div>{t("common.reps")}</div>
                 </div>
                 {exercise.sets.map((set, index) => (
                   <div key={index} className="grid grid-cols-3 gap-2">
@@ -80,15 +84,19 @@ export function WorkoutDetails() {
               // Cardio exercise
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <div className="text-sm font-medium">Duration</div>
+                  <div className="text-sm font-medium">
+                    {t("common.duration")}
+                  </div>
                   <div>{exercise.sets.duration} min</div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium">Distance</div>
+                  <div className="text-sm font-medium">
+                    {t("common.distance")}
+                  </div>
                   <div>{exercise.sets.distance} km</div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium">Pace</div>
+                  <div className="text-sm font-medium">{t("common.pace")}</div>
                   <div>
                     {exercise.sets.duration && exercise.sets.distance
                       ? (
@@ -104,7 +112,9 @@ export function WorkoutDetails() {
             {/* Display exercise notes if they exist */}
             {exercise.notes && exercise.notes.trim() !== "" && (
               <div className="mt-3 pt-3 border-t">
-                <div className="text-sm font-medium text-gray-700">Notes</div>
+                <div className="text-sm font-medium text-gray-700">
+                  {t("common.notes")}
+                </div>
                 <div className="text-gray-600 whitespace-pre-wrap">
                   {exercise.notes}
                 </div>

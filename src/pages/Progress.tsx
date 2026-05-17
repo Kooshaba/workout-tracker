@@ -12,6 +12,7 @@ import {
   Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import { useI18n } from "../i18nContext";
 
 ChartJS.register(
   CategoryScale,
@@ -24,6 +25,7 @@ ChartJS.register(
 );
 
 export function Progress() {
+  const { t, dateLocale } = useI18n();
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [selectedExercise, setSelectedExercise] = useState<string>("");
   const [timeRange, setTimeRange] = useState<number>(30); // days
@@ -79,7 +81,7 @@ export function Progress() {
 
   const chartData = {
     labels: exerciseData.map((data) =>
-      format(new Date(data!.date), "MMM d, yyyy")
+      format(new Date(data!.date), "PP", { locale: dateLocale })
     ),
     datasets: [
       {
@@ -99,7 +101,7 @@ export function Progress() {
       },
       title: {
         display: true,
-        text: "Progress Over Time",
+        text: t("progress.chartTitle"),
       },
     },
     scales: {
@@ -111,17 +113,19 @@ export function Progress() {
 
   return (
     <div className="p-4 space-y-6 pb-20">
-      <h1 className="text-2xl font-bold">Progress</h1>
+      <h1 className="text-2xl font-bold">{t("progress.title")}</h1>
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Exercise</label>
+          <label className="block text-sm font-medium mb-1">
+            {t("progress.exercise")}
+          </label>
           <select
             value={selectedExercise}
             onChange={(e) => setSelectedExercise(e.target.value)}
             className="w-full border rounded-lg px-3 py-2"
           >
-            <option value="">Select an exercise</option>
+            <option value="">{t("progress.selectExercise")}</option>
             {exerciseNames.map((name) => (
               <option key={name} value={name}>
                 {name}
@@ -131,16 +135,18 @@ export function Progress() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Time Range</label>
+          <label className="block text-sm font-medium mb-1">
+            {t("progress.timeRange")}
+          </label>
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(Number(e.target.value))}
             className="w-full border rounded-lg px-3 py-2"
           >
-            <option value={7}>Last 7 days</option>
-            <option value={30}>Last 30 days</option>
-            <option value={90}>Last 90 days</option>
-            <option value={365}>Last year</option>
+            <option value={7}>{t("progress.last7")}</option>
+            <option value={30}>{t("progress.last30")}</option>
+            <option value={90}>{t("progress.last90")}</option>
+            <option value={365}>{t("progress.lastYear")}</option>
           </select>
         </div>
 
@@ -151,8 +157,8 @@ export function Progress() {
         ) : (
           <div className="text-center text-gray-500 py-8">
             {selectedExercise
-              ? "No data available for selected exercise and time range"
-              : "Select an exercise to view progress"}
+              ? t("progress.noData")
+              : t("progress.prompt")}
           </div>
         )}
       </div>

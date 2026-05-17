@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { WorkoutExercise, StrengthSet } from "../../types/workout";
 import { getSimilarExercises } from "../../utils/exerciseUtils";
+import { useI18n } from "../../i18nContext";
 
 type Props = {
   onAddExercise: (
@@ -10,6 +11,7 @@ type Props = {
 };
 
 export function ExerciseForm({ onAddExercise }: Props) {
+  const { t } = useI18n();
   const [exerciseType, setExerciseType] = useState<"strength" | "cardio">(
     "strength"
   );
@@ -76,7 +78,7 @@ export function ExerciseForm({ onAddExercise }: Props) {
               : "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-slate-100"
           }`}
         >
-          Strength
+          {t("exerciseType.strength")}
         </button>
         <button
           type="button"
@@ -87,7 +89,7 @@ export function ExerciseForm({ onAddExercise }: Props) {
               : "border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-slate-100"
           }`}
         >
-          Cardio
+          {t("exerciseType.cardio")}
         </button>
       </div>
 
@@ -97,7 +99,7 @@ export function ExerciseForm({ onAddExercise }: Props) {
             type="text"
             value={exerciseName}
             onChange={(e) => setExerciseName(e.target.value)}
-            placeholder="Exercise name"
+            placeholder={t("exercise.namePlaceholder")}
             className="w-full border rounded-lg px-3 py-2"
             required
           />
@@ -136,7 +138,7 @@ export function ExerciseForm({ onAddExercise }: Props) {
               strokeLinejoin="round"
             />
           </svg>
-          Add
+          {t("common.add")}
         </button>
       </div>
     </form>

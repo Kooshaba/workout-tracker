@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { Workout, WorkoutExercise, StrengthSet, CardioSession } from "../types/workout";
+import { useI18n } from "../i18nContext";
 
 type Recommendation = {
   name: string;
@@ -12,6 +13,8 @@ type CoachResponse = {
   answer: string;
   recommendations: Recommendation[];
 };
+
+type Translate = ReturnType<typeof useI18n>["t"];
 
 const coachResponseSchema = {
   type: "object",
@@ -36,52 +39,65 @@ const coachResponseSchema = {
   additionalProperties: false,
 } as const;
 
-function workoutSnapshot(workout: Workout | null) {
-  if (!workout) return "No active workout. Start one in the Workout tab.";
+function workoutSnapshot(workout: Workout | null, t: Translate) {
+  if (!workout) return t("coach.noActiveWorkout");
 
   const lines: string[] = [];
-  lines.push(`Workout: ${workout.name}`);
-  lines.push(`Exercises: ${workout.exercises.length}`);
+  lines.push(t("coach.snapshotWorkout", { name: workout.name }));
+  lines.push(t("coach.snapshotExercises", { count: workout.exercises.length }));
 
   for (const ex of workout.exercises) {
     if (Array.isArray(ex.sets)) {
       const completed = ex.sets.filter((s) => s.completed).length;
-      lines.push(`- ${ex.name}: ${ex.sets.length} sets (${completed} completed)`);
+      lines.push(
+        t("coach.snapshotStrength", {
+          name: ex.name,
+          sets: ex.sets.length,
+          completed,
+        })
+      );
     } else {
-      lines.push(`- ${ex.name}: cardio ${ex.sets.duration} min / ${ex.sets.distance} km`);
+      lines.push(
+        t("coach.snapshotCardio", {
+          name: ex.name,
+          duration: ex.sets.duration,
+          distance: ex.sets.distance,
+        })
+      );
     }
   }
 
-  if (workout.notes?.trim()) lines.push(`Notes: ${workout.notes}`);
+  if (workout.notes?.trim()) {
+    lines.push(t("coach.snapshotNotes", { notes: workout.notes }));
+  }
   return lines.join("\n");
 }
 
-function fallbackResponse(workout: Workout | null): CoachResponse {
+function fallbackResponse(workout: Workout | null, t: Translate): CoachResponse {
   if (!workout) {
     return {
-      answer: "You do not currently have an active workout session. Start one first, then I can give context-aware recommendations.",
+      answer: t("coach.fallbackNoWorkout"),
       recommendations: [],
     };
   }
 
   return {
-    answer:
-      "I can still offer a baseline: add 1-2 movements that balance your current session, keep intensity submaximal, and avoid redundant fatigue.",
+    answer: t("coach.fallbackBaseline"),
     recommendations: [
       {
         name: "Chest-Supported Row",
         type: "strength",
-        reason: "Reliable pull pattern with low systemic fatigue.",
+        reason: t("coach.reasonRow"),
       },
       {
         name: "Dead Bug",
         type: "strength",
-        reason: "Improves trunk stability and movement quality.",
+        reason: t("coach.reasonDeadBug"),
       },
       {
         name: "Zone 2 Bike",
         type: "cardio",
-        reason: "Adds conditioning without crushing recovery.",
+        reason: t("coach.reasonBike"),
       },
     ],
   };
@@ -91,13 +107,15 @@ async function askData(options: {
   apiKey: string;
   model: string;
   question: string;
-  workout: Workout | null;
+  snapshot: string;
+  language: string;
+  t: Translate;
 }): Promise<CoachResponse> {
-  const { apiKey, model, question, workout } = options;
+  const { apiKey, model, question, snapshot, language, t } = options;
 
-  const system = `You are Data, an evolved Commander Data style fitness assistant: precise, calm, direct, practical. Avoid fluff. Give safe, conservative workout guidance. Keep recommendations to 1-3 items.`;
+  const system = `You are Data, an evolved Commander Data style fitness assistant: precise, calm, direct, practical. Avoid fluff. Give safe, conservative workout guidance. Keep recommendations to 1-3 items. Respond in ${language === "ja" ? "Japanese" : "English"}.`;
 
-  const user = `Question: ${question}\n\nCurrent workout context:\n${workoutSnapshot(workout)}`;
+  const user = `Question: ${question}\n\nCurrent workout context:\n${snapshot}`;
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -133,23 +151,23 @@ async function askData(options: {
   if (message?.refusal) throw new Error(message.refusal);
 
   const content = message?.content?.trim();
-  if (!content) throw new Error("No structured response returned.");
+  if (!content) throw new Error(t("coach.noStructuredResponse"));
 
   const parsed = JSON.parse(content) as Partial<CoachResponse>;
 
   return {
-    answer: parsed.answer || "No response generated.",
+    answer: parsed.answer || t("coach.noResponse"),
     recommendations: Array.isArray(parsed.recommendations)
       ? parsed.recommendations.slice(0, 3).map((r) => ({
-          name: r.name || "Suggested Exercise",
+          name: r.name || t("coach.suggestedExercise"),
           type: r.type === "cardio" ? "cardio" : "strength",
-          reason: r.reason || "Useful addition for your current workout context.",
+          reason: r.reason || t("coach.defaultReason"),
         }))
       : [],
   };
 }
 
-function makeExercise(rec: Recommendation): WorkoutExercise {
+function makeExercise(rec: Recommendation, t: Translate): WorkoutExercise {
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: rec.name,
@@ -158,11 +176,12 @@ function makeExercise(rec: Recommendation): WorkoutExercise {
       rec.type === "strength"
         ? ([{ reps: 10, weight: 0, completed: false }] as StrengthSet[])
         : ({ duration: 12, distance: 0, pace: 0 } as CardioSession),
-    notes: `Coach suggestion: ${rec.reason}`,
+    notes: `${t("coach.notePrefix")}: ${rec.reason}`,
   };
 }
 
 export function Coach() {
+  const { language, t } = useI18n();
   const [currentWorkout, setCurrentWorkout] = useLocalStorage<Workout | null>("currentWorkout", null);
   const [apiKey, setApiKey] = useLocalStorage<string>("coachApiKey", "");
   const [model, setModel] = useLocalStorage<string>("coachModel", "gpt-4o-mini");
@@ -171,24 +190,33 @@ export function Coach() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const snapshot = useMemo(() => workoutSnapshot(currentWorkout), [currentWorkout]);
+  const snapshot = useMemo(() => workoutSnapshot(currentWorkout, t), [currentWorkout, t]);
 
   async function askCoach() {
-    const q = question.trim() || "What should I add to this workout?";
+    const q = question.trim() || t("coach.askDefault");
     setLoading(true);
     setError(null);
 
     try {
       if (!apiKey.trim()) {
-        setAnswer(fallbackResponse(currentWorkout));
-        setError("No API key set. Showing fallback guidance.");
+        setAnswer(fallbackResponse(currentWorkout, t));
+        setError(t("coach.noApiKey"));
       } else {
-        const response = await askData({ apiKey, model, question: q, workout: currentWorkout });
+        const response = await askData({
+          apiKey,
+          model,
+          question: q,
+          snapshot,
+          language,
+          t,
+        });
         setAnswer(response);
       }
     } catch (err) {
-      setAnswer(fallbackResponse(currentWorkout));
-      setError(err instanceof Error ? err.message : "Coach request failed. Showing fallback guidance.");
+      setAnswer(fallbackResponse(currentWorkout, t));
+      setError(
+        err instanceof Error ? err.message : t("coach.requestFailed")
+      );
     } finally {
       setLoading(false);
     }
@@ -196,26 +224,26 @@ export function Coach() {
 
   function addRecommendation(rec: Recommendation) {
     if (!currentWorkout) return;
-    const next = { ...currentWorkout, exercises: [...currentWorkout.exercises, makeExercise(rec)] };
+    const next = { ...currentWorkout, exercises: [...currentWorkout.exercises, makeExercise(rec, t)] };
     setCurrentWorkout(next);
   }
 
   return (
     <div className="pb-20 p-4 space-y-4">
-      <h1 className="text-xl font-bold">Coach (Experimental)</h1>
+      <h1 className="text-xl font-bold">{t("coach.title")}</h1>
 
       <div className="rounded-lg border p-3 space-y-2">
-        <div className="text-sm font-semibold">Current workout context (auto-shared)</div>
+        <div className="text-sm font-semibold">{t("coach.contextTitle")}</div>
         <pre className="text-xs whitespace-pre-wrap text-gray-600">{snapshot}</pre>
       </div>
 
       <div className="space-y-2 rounded-lg border p-3">
-        <div className="text-sm font-semibold">Data connection (optional but recommended)</div>
+        <div className="text-sm font-semibold">{t("coach.connectionTitle")}</div>
         <input
           type="password"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
-          placeholder="OpenAI API key (sk-...)"
+          placeholder={t("coach.apiKeyPlaceholder")}
           className="w-full border rounded-lg px-3 py-2"
         />
         <select
@@ -228,19 +256,19 @@ export function Coach() {
           <option value="gpt-4o">gpt-4o</option>
           <option value="gpt-4.1-mini">gpt-4.1-mini</option>
         </select>
-        <p className="text-xs text-gray-500">Stored locally on this device. If missing, app uses fallback suggestions.</p>
+        <p className="text-xs text-gray-500">{t("coach.storageNote")}</p>
       </div>
 
       <div className="space-y-2">
         <label htmlFor="coach-question" className="block text-sm font-medium text-gray-700">
-          Ask Data for help
+          {t("coach.askLabel")}
         </label>
         <textarea
           id="coach-question"
           rows={4}
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="e.g., I already did squats and bench. What should I add without overdoing fatigue?"
+          placeholder={t("coach.askPlaceholder")}
           className="w-full border rounded-lg px-3 py-2"
         />
         <button
@@ -248,7 +276,7 @@ export function Coach() {
           disabled={loading}
           className="rounded-xl border border-sky-800 bg-sky-950/60 px-4 py-2 font-semibold text-sky-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sky-900/70 active:translate-y-0.5 disabled:opacity-60"
         >
-          {loading ? "Consulting Data..." : "Ask Data"}
+          {loading ? t("coach.loading") : t("coach.askButton")}
         </button>
         {error && <p className="text-xs text-amber-600">{error}</p>}
       </div>
@@ -267,7 +295,7 @@ export function Coach() {
                     onClick={() => addRecommendation(rec)}
                     className="mt-2 rounded-xl border border-emerald-900/80 bg-emerald-950/50 px-3 py-2 text-sm font-semibold text-emerald-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-900/50 active:translate-y-0.5"
                   >
-                    Add to current workout
+                    {t("coach.addToWorkout")}
                   </button>
                 )}
               </div>

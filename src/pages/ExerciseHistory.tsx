@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { Workout, WorkoutExercise } from "../types/workout";
+import { useI18n } from "../i18nContext";
 
 type ExerciseEntry = {
   date: string;
@@ -11,6 +12,7 @@ type ExerciseEntry = {
 };
 
 export function ExerciseHistory() {
+  const { t, dateLocale } = useI18n();
   const { name } = useParams();
   const navigate = useNavigate();
   const [history, setHistory] = useState<ExerciseEntry[]>([]);
@@ -41,7 +43,7 @@ export function ExerciseHistory() {
   }, [name]);
 
   if (!name) {
-    return <div className="p-4">Exercise not found</div>;
+    return <div className="p-4">{t("exerciseHistory.notFound")}</div>;
   }
 
   return (
@@ -51,21 +53,23 @@ export function ExerciseHistory() {
           onClick={() => navigate(-1)}
           className="rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800/70 hover:text-slate-100 active:translate-y-0.5"
         >
-          ← Back
+          ← {t("common.back")}
         </button>
         <h1 className="text-2xl font-bold">{name}</h1>
       </div>
 
       <div className="space-y-4">
         {history.length === 0 ? (
-          <p className="text-gray-500">No history found for this exercise</p>
+          <p className="text-gray-500">{t("exerciseHistory.empty")}</p>
         ) : (
           history.map((entry, index) => (
             <div key={index} className="border rounded-lg p-4">
               <div className="flex justify-between items-center mb-2">
                 <div>
                   <div className="font-medium">
-                    {format(new Date(entry.date), "MMMM d, yyyy")}
+                    {format(new Date(entry.date), "PP", {
+                      locale: dateLocale,
+                    })}
                   </div>
                   <div
                     className="cursor-pointer text-sm text-sky-300 transition-colors hover:text-sky-100"
@@ -80,9 +84,9 @@ export function ExerciseHistory() {
                 // Strength exercise
                 <div className="space-y-2">
                   <div className="grid grid-cols-3 gap-2 text-sm font-medium">
-                    <div>Set</div>
-                    <div>Weight</div>
-                    <div>Reps</div>
+                    <div>{t("common.set")}</div>
+                    <div>{t("common.weight")}</div>
+                    <div>{t("common.reps")}</div>
                   </div>
                   {entry.exercise.sets.map((set, setIndex) => (
                     <div key={setIndex} className="grid grid-cols-3 gap-2">
@@ -96,15 +100,21 @@ export function ExerciseHistory() {
                 // Cardio exercise
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <div className="text-sm font-medium">Duration</div>
+                    <div className="text-sm font-medium">
+                      {t("common.duration")}
+                    </div>
                     <div>{entry.exercise.sets.duration} min</div>
                   </div>
                   <div>
-                    <div className="text-sm font-medium">Distance</div>
+                    <div className="text-sm font-medium">
+                      {t("common.distance")}
+                    </div>
                     <div>{entry.exercise.sets.distance} km</div>
                   </div>
                   <div>
-                    <div className="text-sm font-medium">Pace</div>
+                    <div className="text-sm font-medium">
+                      {t("common.pace")}
+                    </div>
                     <div>
                       {entry.exercise.sets.duration &&
                       entry.exercise.sets.distance

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useRestTimer } from "../../context/RestTimerContext";
 import { playRestTimerDoneSound } from "../../utils/restTimerAudio";
+import { useI18n } from "../../i18nContext";
 
 const RING_SIZE = 96;
 const RING_STROKE = 8;
@@ -14,6 +15,7 @@ function formatTime(totalSeconds: number) {
 }
 
 export function RestTimer() {
+  const { t } = useI18n();
   const {
     state,
     remainingSeconds,
@@ -48,20 +50,20 @@ export function RestTimer() {
     RING_CIRCUMFERENCE * (1 - clampedProgress / 100);
   const isExpired = state.isExpired;
   const statusLabel = isExpired
-    ? "Rest complete"
+    ? t("timer.complete")
     : state.isActive
-      ? "Resting"
-      : "Paused";
+      ? t("timer.resting")
+      : t("timer.paused");
   const helperText = isExpired
-    ? "Nice work. Start another rest or get back to the next set."
+    ? t("timer.completeHelp")
     : state.isActive
-      ? "Tap the time or Pause when you are ready early."
-      : "Adjust time here to save it for this exercise.";
+      ? t("timer.activeHelp")
+      : t("timer.pausedHelp");
   const primaryActionLabel = isExpired
-    ? "Start another"
+    ? t("timer.startAnother")
     : state.isActive
-      ? "Pause"
-      : "Resume";
+      ? t("timer.pause")
+      : t("timer.resume");
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-24 z-50 px-4">
@@ -71,7 +73,7 @@ export function RestTimer() {
             ? "border-emerald-300/50 bg-emerald-950/95 text-emerald-50"
             : "border-slate-700/80 bg-slate-950/95 text-slate-50"
         }`}
-        aria-label="Rest timer"
+        aria-label={t("exercise.restTitle")}
       >
         <div className="flex items-center gap-4">
           <button
@@ -123,10 +125,10 @@ export function RestTimer() {
                 }`}
               >
                 {isExpired
-                  ? "Done"
+                  ? t("timer.done")
                   : state.isActive
-                    ? "Tap pause"
-                    : "Tap start"}
+                    ? t("timer.tapPause")
+                    : t("timer.tapStart")}
               </span>
             </span>
           </button>
@@ -143,7 +145,7 @@ export function RestTimer() {
                   {statusLabel}
                 </p>
                 <h2 className="mt-1 truncate text-lg font-bold">
-                  {state.exerciseName || "Rest"}
+                  {state.exerciseName || t("exercise.rest")}
                 </h2>
               </div>
               <button
@@ -151,9 +153,9 @@ export function RestTimer() {
                 className={`rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold transition-all duration-200 hover:bg-white/10 hover:text-white active:scale-95 ${
                   isExpired ? "text-emerald-100/80" : "text-slate-300"
                 }`}
-                aria-label="Close timer"
+                aria-label={t("timer.closeLabel")}
               >
-                Close
+                {t("common.close")}
               </button>
             </div>
 
@@ -171,13 +173,13 @@ export function RestTimer() {
                   onClick={restart}
                   className="rounded-2xl border border-emerald-200/30 bg-emerald-300 px-4 py-3 text-sm font-bold text-emerald-950 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-200 active:translate-y-0"
                 >
-                  Start another
+                  {t("timer.startAnother")}
                 </button>
                 <button
                   onClick={acknowledge}
                   className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-semibold text-emerald-50 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/15 active:translate-y-0"
                 >
-                  Done
+                  {t("timer.done")}
                 </button>
               </div>
             ) : (
@@ -217,9 +219,9 @@ export function RestTimer() {
                   <button
                     onClick={reset}
                     className="rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold text-slate-200 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/10 active:translate-y-0"
-                    title="Reset to saved rest time"
+                    title={t("timer.resetTitle")}
                   >
-                    Reset
+                    {t("common.reset")}
                   </button>
                 </div>
               </>

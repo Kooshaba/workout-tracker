@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Workout, WorkoutTemplate } from "../types/workout";
 import { TemplateEditor } from "../components/workout/TemplateEditor";
+import { useI18n } from "../i18nContext";
 
 export function Templates() {
+  const { t } = useI18n();
   const [templates, setTemplates] = useState<WorkoutTemplate[]>(() =>
     JSON.parse(localStorage.getItem("workoutTemplates") || "[]")
   );
@@ -32,7 +34,7 @@ export function Templates() {
   const createTemplateFromWorkout = (workout: Workout) => {
     const template: WorkoutTemplate = {
       id: Date.now().toString(),
-      name: `Template from ${workout.name}`,
+      name: t("templates.fromWorkout", { name: workout.name }),
       exercises: workout.exercises.map((exercise) => ({
         id: exercise.id,
         name: exercise.name,
@@ -53,19 +55,19 @@ export function Templates() {
   return (
     <div className="p-4 space-y-6 pb-20">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Templates</h1>
+        <h1 className="text-2xl font-bold">{t("templates.title")}</h1>
         <button
           onClick={() => setShowWorkoutSelect(true)}
           className="rounded-xl border border-sky-800 bg-sky-950/60 px-4 py-2 font-semibold text-sky-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sky-900/70 active:translate-y-0.5"
         >
-          Create Template
+          {t("templates.create")}
         </button>
       </div>
 
       {showWorkoutSelect && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-sm w-full space-y-4">
-            <h2 className="font-semibold">Select Workout</h2>
+            <h2 className="font-semibold">{t("templates.selectWorkout")}</h2>
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {workouts.map((workout) => (
                 <button
@@ -73,7 +75,11 @@ export function Templates() {
                   onClick={() => createTemplateFromWorkout(workout)}
                   className="w-full text-left p-3 border rounded-lg hover:bg-gray-50"
                 >
-                  {workout.name} ({workout.exercises.length} exercises)
+                  {workout.name} (
+                  {t("common.exerciseCount", {
+                    count: workout.exercises.length,
+                  })}
+                  )
                 </button>
               ))}
             </div>
@@ -81,7 +87,7 @@ export function Templates() {
               onClick={() => setShowWorkoutSelect(false)}
               className="w-full rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800/70 hover:text-slate-100 active:translate-y-0.5"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
           </div>
         </div>
@@ -105,13 +111,13 @@ export function Templates() {
                   onClick={() => setEditingTemplate(template)}
                   className="text-sky-300 transition-colors hover:text-sky-100"
                 >
-                  Edit
+                  {t("common.edit")}
                 </button>
                 <button
                   onClick={() => deleteTemplate(template.id)}
                   className="text-rose-300 transition-colors hover:text-rose-100"
                 >
-                  Delete
+                  {t("common.delete")}
                 </button>
               </div>
             </div>
