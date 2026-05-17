@@ -12,7 +12,6 @@ export function Home() {
   const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(
     null
   );
-  const [showExport, setShowExport] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showImport, setShowImport] = useState(false);
 
@@ -27,8 +26,50 @@ export function Home() {
     setShowConfirmDelete(null);
   };
 
-  const handleExport = () => {
-    setShowExport(true);
+  const backupFileName = () =>
+    `workout-history-${new Date().toISOString().slice(0, 10)}.json`;
+
+  const downloadBackup = (file: File) => {
+    const url = URL.createObjectURL(file);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = file.name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  };
+
+  const handleExport = async () => {
+    const file = new File(
+      [JSON.stringify(workoutHistory, null, 2)],
+      backupFileName(),
+      { type: "application/json" }
+    );
+
+    try {
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: t("home.exportTitle"),
+        });
+        return;
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+
+      console.warn("Falling back to backup download.", error);
+    }
+
+    try {
+      downloadBackup(file);
+      alert(t("home.exportSuccess"));
+    } catch (error) {
+      alert(t("home.exportError"));
+      console.error(error);
+    }
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,18 +143,24 @@ export function Home() {
         {t("home.newWorkout")}
       </Link>
 
-      <div className="flex space-x-2">
+      <div className="grid grid-cols-2 gap-2">
         <button
           onClick={handleExport}
           className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 font-semibold text-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0.5"
         >
-          {t("home.exportHistory")}
+          {t("home.exportBackup")}
+        </button>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="rounded-xl border border-amber-900/80 bg-amber-950/60 px-4 py-2 font-semibold text-amber-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-amber-900/50 active:translate-y-0.5"
+        >
+          {t("home.importBackup")}
         </button>
         <button
           onClick={() => setShowImport(true)}
-          className="rounded-xl border border-amber-900/80 bg-amber-950/60 px-4 py-2 font-semibold text-amber-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-amber-900/50 active:translate-y-0.5"
+          className="col-span-2 rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800/70 hover:text-slate-100 active:translate-y-0.5"
         >
-          {t("home.importHistory")}
+          {t("home.pasteJson")}
         </button>
         <input
           type="file"
@@ -123,27 +170,6 @@ export function Home() {
           className="hidden"
         />
       </div>
-
-      {showExport && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full space-y-4">
-            <h2 className="font-semibold">{t("home.exportTitle")}</h2>
-            <textarea
-              className="w-full h-96 border rounded-lg p-2 font-mono text-sm"
-              value={JSON.stringify(workoutHistory, null, 2)}
-              readOnly
-            />
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setShowExport(false)}
-                className="rounded-xl border border-slate-700 px-4 py-2 font-semibold text-slate-300 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800/70 hover:text-slate-100 active:translate-y-0.5"
-              >
-                {t("common.close")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showImport && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
