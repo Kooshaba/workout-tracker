@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Workout, WorkoutExercise } from "../types/workout";
+import { useState } from "react";
+import { WorkoutExercise } from "../types/workout";
 import { format, subDays } from "date-fns";
 import {
   Chart as ChartJS,
@@ -13,6 +13,7 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import { useI18n } from "../i18nContext";
+import { useWorkoutHistory } from "../context/useWorkoutHistory";
 
 ChartJS.register(
   CategoryScale,
@@ -26,16 +27,9 @@ ChartJS.register(
 
 export function Progress() {
   const { t, dateLocale } = useI18n();
-  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const { workouts } = useWorkoutHistory();
   const [selectedExercise, setSelectedExercise] = useState<string>("");
   const [timeRange, setTimeRange] = useState<number>(30); // days
-
-  useEffect(() => {
-    const workoutHistory = JSON.parse(
-      localStorage.getItem("workoutHistory") || "[]"
-    );
-    setWorkouts(workoutHistory);
-  }, []);
 
   // Get unique exercise names
   const exerciseNames = Array.from(

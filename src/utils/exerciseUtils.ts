@@ -1,11 +1,10 @@
-import { WorkoutExercise } from "../types/workout";
-import { Workout } from "../types/workout";
+import type { Workout, WorkoutExercise } from "../types/workout";
 
-export function getSimilarExercises(searchTerm: string): string[] {
+export function getSimilarExercises(
+  searchTerm: string,
+  workoutHistory: Workout[]
+): string[] {
   try {
-    const workoutHistory = JSON.parse(
-      localStorage.getItem("workoutHistory") || "[]"
-    );
     const exerciseNames = new Set<string>();
 
     workoutHistory.forEach((workout: Workout) => {

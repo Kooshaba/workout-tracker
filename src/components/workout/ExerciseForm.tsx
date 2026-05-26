@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { WorkoutExercise, StrengthSet } from "../../types/workout";
 import { getSimilarExercises } from "../../utils/exerciseUtils";
 import { useI18n } from "../../i18nContext";
+import { useWorkoutHistory } from "../../context/useWorkoutHistory";
 
 type Props = {
   onAddExercise: (
@@ -12,6 +13,7 @@ type Props = {
 
 export function ExerciseForm({ onAddExercise }: Props) {
   const { t } = useI18n();
+  const { workouts } = useWorkoutHistory();
   const [exerciseType, setExerciseType] = useState<"strength" | "cardio">(
     "strength"
   );
@@ -21,14 +23,14 @@ export function ExerciseForm({ onAddExercise }: Props) {
 
   useEffect(() => {
     if (exerciseName.length >= 2) {
-      const similarExercises = getSimilarExercises(exerciseName);
+      const similarExercises = getSimilarExercises(exerciseName, workouts);
       setSuggestions(similarExercises);
       setShowSuggestions(similarExercises.length > 0);
     } else {
       setSuggestions([]);
       setShowSuggestions(false);
     }
-  }, [exerciseName]);
+  }, [exerciseName, workouts]);
 
   const createExercise = (name: string) => {
     const initialStrengthSet: StrengthSet = {

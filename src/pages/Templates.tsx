@@ -1,15 +1,14 @@
 import { useState } from "react";
-import { Workout, WorkoutTemplate } from "../types/workout";
+import type { Workout, WorkoutTemplate } from "../types/workout";
 import { TemplateEditor } from "../components/workout/TemplateEditor";
 import { useI18n } from "../i18nContext";
+import { useWorkoutHistory } from "../context/useWorkoutHistory";
 
 export function Templates() {
   const { t } = useI18n();
+  const { workouts } = useWorkoutHistory();
   const [templates, setTemplates] = useState<WorkoutTemplate[]>(() =>
     JSON.parse(localStorage.getItem("workoutTemplates") || "[]")
-  );
-  const [workouts] = useState<Workout[]>(() =>
-    JSON.parse(localStorage.getItem("workoutHistory") || "[]")
   );
   const [showWorkoutSelect, setShowWorkoutSelect] = useState(false);
   const [editingTemplate, setEditingTemplate] =

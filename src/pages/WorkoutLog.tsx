@@ -11,10 +11,12 @@ import { ExerciseForm } from "../components/workout/ExerciseForm";
 import { ExerciseList } from "../components/workout/ExerciseList";
 import { useI18n } from "../i18nContext";
 import { format } from "date-fns";
+import { useWorkoutHistory } from "../context/useWorkoutHistory";
 // Rest timer is rendered globally in App
 
 export function WorkoutLog() {
   const { t, dateLocale } = useI18n();
+  const { addWorkout, workouts } = useWorkoutHistory();
   const [currentWorkout, setCurrentWorkout] = useLocalStorage<Workout | null>(
     "currentWorkout",
     null
@@ -85,12 +87,7 @@ export function WorkoutLog() {
   };
 
   const finishWorkout = () => {
-    // Save to workout history
-    const workouts = JSON.parse(localStorage.getItem("workoutHistory") || "[]");
-    localStorage.setItem(
-      "workoutHistory",
-      JSON.stringify([...workouts, currentWorkout])
-    );
+    if (currentWorkout) addWorkout(currentWorkout);
     setCurrentWorkout(null);
   };
 
@@ -226,6 +223,7 @@ export function WorkoutLog() {
 
           <ExerciseList
             exercises={currentWorkout.exercises}
+            workoutHistory={workouts}
             onUpdate={(exercises) => {
               setCurrentWorkout({
                 ...currentWorkout,

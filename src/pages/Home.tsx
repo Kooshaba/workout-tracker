@@ -1,14 +1,14 @@
 import { Link } from "react-router-dom";
-import { Workout } from "../types/workout";
 import { format } from "date-fns";
 import { useState, useRef } from "react";
 import { Language, useI18n } from "../i18nContext";
+import { AuthStatus } from "../components/AuthStatus";
+import { useWorkoutHistory } from "../context/useWorkoutHistory";
 
 export function Home() {
   const { language, setLanguage, t, dateLocale } = useI18n();
-  const [workoutHistory, setWorkoutHistory] = useState<Workout[]>(() =>
-    JSON.parse(localStorage.getItem("workoutHistory") || "[]")
-  );
+  const { workouts: workoutHistory, deleteWorkout, replaceWorkouts } =
+    useWorkoutHistory();
   const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(
     null
   );
@@ -19,10 +19,8 @@ export function Home() {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 
-  const deleteWorkout = (workoutId: string) => {
-    const updatedWorkouts = workoutHistory.filter((w) => w.id !== workoutId);
-    setWorkoutHistory(updatedWorkouts);
-    localStorage.setItem("workoutHistory", JSON.stringify(updatedWorkouts));
+  const handleDeleteWorkout = (workoutId: string) => {
+    deleteWorkout(workoutId);
     setShowConfirmDelete(null);
   };
 
@@ -81,8 +79,7 @@ export function Home() {
       try {
         const importedData = JSON.parse(e.target?.result as string);
         if (Array.isArray(importedData)) {
-          setWorkoutHistory(importedData);
-          localStorage.setItem("workoutHistory", JSON.stringify(importedData));
+          replaceWorkouts(importedData);
           alert(t("home.importSuccess"));
         } else {
           alert(t("home.invalidFile"));
@@ -100,8 +97,7 @@ export function Home() {
     try {
       const importedData = JSON.parse(jsonText);
       if (Array.isArray(importedData)) {
-        setWorkoutHistory(importedData);
-        localStorage.setItem("workoutHistory", JSON.stringify(importedData));
+        replaceWorkouts(importedData);
         alert(t("home.importSuccess"));
         setShowImport(false);
       } else {
@@ -118,7 +114,6 @@ export function Home() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">{t("app.title")}</h1>
-          <h3 className="text-sm text-gray-500">{t("app.version")}</h3>
         </div>
         <div className="flex flex-col items-end gap-2">
           <label className="text-xs font-medium text-gray-500" htmlFor="language">
@@ -142,6 +137,8 @@ export function Home() {
       >
         {t("home.newWorkout")}
       </Link>
+
+      <AuthStatus />
 
       <div className="grid grid-cols-2 gap-2">
         <button
@@ -220,7 +217,7 @@ export function Home() {
                 {t("common.cancel")}
               </button>
               <button
-                onClick={() => deleteWorkout(showConfirmDelete)}
+                onClick={() => handleDeleteWorkout(showConfirmDelete)}
                 className="rounded-xl border border-rose-900/80 bg-rose-950/50 px-4 py-2 font-semibold text-rose-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-900/50 active:translate-y-0.5"
               >
                 {t("common.delete")}

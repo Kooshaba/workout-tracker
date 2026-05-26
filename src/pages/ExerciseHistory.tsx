@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { Workout, WorkoutExercise } from "../types/workout";
+import type { WorkoutExercise } from "../types/workout";
 import { useI18n } from "../i18nContext";
+import { useWorkoutHistory } from "../context/useWorkoutHistory";
 
 type ExerciseEntry = {
   date: string;
@@ -15,13 +16,10 @@ export function ExerciseHistory() {
   const { t, dateLocale } = useI18n();
   const { name } = useParams();
   const navigate = useNavigate();
+  const { workouts } = useWorkoutHistory();
   const [history, setHistory] = useState<ExerciseEntry[]>([]);
 
   useEffect(() => {
-    const workouts: Workout[] = JSON.parse(
-      localStorage.getItem("workoutHistory") || "[]"
-    );
-
     const exerciseHistory = workouts
       .flatMap((workout) => {
         const exercise = workout.exercises.find((e) => e.name === name);
@@ -40,7 +38,7 @@ export function ExerciseHistory() {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     setHistory(exerciseHistory);
-  }, [name]);
+  }, [name, workouts]);
 
   if (!name) {
     return <div className="p-4">{t("exerciseHistory.notFound")}</div>;

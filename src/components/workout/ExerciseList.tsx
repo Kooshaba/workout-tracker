@@ -9,11 +9,17 @@ import { ExerciseItem } from "./ExerciseItem";
 
 type Props = {
   exercises: WorkoutExercise[];
+  workoutHistory: Workout[];
   onUpdate: (exercises: WorkoutExercise[]) => void;
   onTimerStart: (exerciseName: string) => void;
 };
 
-export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
+export function ExerciseList({
+  exercises,
+  workoutHistory,
+  onUpdate,
+  onTimerStart,
+}: Props) {
   const lastSetRef = useRef<HTMLInputElement>(null);
   const previousExerciseIdsRef = useRef<string[]>(exercises.map((exercise) => exercise.id));
   const [animatedExerciseIds, setAnimatedExerciseIds] = useState<string[]>([]);
@@ -56,12 +62,8 @@ export function ExerciseList({ exercises, onUpdate, onTimerStart }: Props) {
   }, [animatedSet]);
 
   const getLastCompletedSet = (exerciseName: string): StrengthSet | null => {
-    const workoutHistory = JSON.parse(
-      localStorage.getItem("workoutHistory") || "[]"
-    );
-
     // Find the last workout that had this exercise
-    const lastWorkout = workoutHistory
+    const lastWorkout = [...workoutHistory]
       .sort(
         (a: Workout, b: Workout) =>
           new Date(b.date).getTime() - new Date(a.date).getTime()

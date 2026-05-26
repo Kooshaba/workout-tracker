@@ -42,3 +42,263 @@
 .dark-theme .shadow-md {
   box-shadow: none !important;
 }
+
+.calendar-panel {
+  overflow: visible;
+  border: 1px solid rgba(51, 65, 85, 0.9);
+  border-radius: 24px;
+  background:
+    linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.96)),
+    #0f172a;
+  box-shadow: 0 18px 45px rgba(2, 6, 23, 0.28);
+}
+
+.workout-calendar.react-calendar {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #e5e7eb;
+  font-family: inherit;
+  line-height: 1.2;
+  padding: 14px;
+}
+
+.workout-calendar .react-calendar__navigation {
+  align-items: center;
+  gap: 8px;
+  height: auto;
+  margin-bottom: 14px;
+}
+
+.workout-calendar .react-calendar__navigation button {
+  min-width: 40px;
+  height: 40px;
+  border: 1px solid rgba(51, 65, 85, 0.9);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #cbd5e1;
+  font-size: 18px;
+  font-weight: 700;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.workout-calendar .react-calendar__navigation button:enabled:hover,
+.workout-calendar .react-calendar__navigation button:enabled:focus {
+  border-color: rgba(56, 189, 248, 0.5);
+  background: rgba(12, 74, 110, 0.35);
+  color: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.workout-calendar .react-calendar__navigation button:disabled {
+  background: rgba(15, 23, 42, 0.35);
+  color: #475569;
+}
+
+.workout-calendar .react-calendar__navigation__label {
+  flex-grow: 1.8 !important;
+  color: #f8fafc !important;
+  font-size: 18px !important;
+  letter-spacing: 0;
+}
+
+.workout-calendar .react-calendar__month-view__weekdays {
+  margin-bottom: 8px;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.workout-calendar .react-calendar__month-view__weekdays__weekday {
+  padding: 8px 0;
+  text-decoration: none;
+}
+
+.workout-calendar .react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none;
+}
+
+.workout-calendar .react-calendar__viewContainer,
+.workout-calendar .react-calendar__month-view {
+  overflow: visible;
+}
+
+.workout-calendar .react-calendar__month-view__days {
+  row-gap: 12px;
+  overflow: visible;
+  padding: 0;
+}
+
+.workout-calendar .react-calendar__tile {
+  position: relative;
+  --tile-radius: 16px;
+  --tile-inset: 6px;
+  isolation: isolate;
+  overflow: visible !important;
+  clip-path: none !important;
+  appearance: none;
+  -webkit-appearance: none;
+  display: flex;
+  min-height: 56px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #cbd5e1;
+  font-size: 15px;
+  font-weight: 700;
+  transition:
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.workout-calendar .react-calendar__tile::before {
+  content: "";
+  position: absolute;
+  inset: var(--tile-inset);
+  z-index: 0;
+  border: 1px solid transparent;
+  border-radius: var(--tile-radius);
+  background: transparent;
+  box-shadow: none;
+  pointer-events: none;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.workout-calendar .react-calendar__tile:enabled:hover,
+.workout-calendar .react-calendar__tile:enabled:focus {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.workout-calendar .react-calendar__tile:enabled:hover::before,
+.workout-calendar .react-calendar__tile:enabled:focus::before {
+  border-color: rgba(56, 189, 248, 0.45);
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.workout-calendar .react-calendar__month-view__days__day--neighboringMonth {
+  color: #475569;
+}
+
+.workout-calendar .react-calendar__month-view__days__day--weekend {
+  color: #fca5a5;
+}
+
+.workout-calendar .react-calendar__tile--now::before {
+  border-color: rgba(245, 158, 11, 0.55);
+  background: rgba(120, 53, 15, 0.22);
+}
+
+.workout-calendar .react-calendar__tile--now {
+  color: #fde68a;
+}
+
+.workout-calendar .react-calendar__tile--active,
+.workout-calendar .react-calendar__tile--active:enabled:hover,
+.workout-calendar .react-calendar__tile--active:enabled:focus {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #ffffff;
+}
+
+.workout-calendar .react-calendar__tile--active::before,
+.workout-calendar .react-calendar__tile--active:enabled:hover::before,
+.workout-calendar .react-calendar__tile--active:enabled:focus::before {
+  border-color: rgba(56, 189, 248, 0.9);
+  background: linear-gradient(145deg, #0284c7, #2563eb);
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.32);
+}
+
+.workout-calendar .react-calendar__tile.has-workout:not(.react-calendar__tile--active)::before {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(6, 78, 59, 0.34);
+}
+
+.workout-calendar .react-calendar__tile.has-workout:not(.react-calendar__tile--active) {
+  color: #d1fae5;
+}
+
+.workout-calendar .react-calendar__tile abbr {
+  position: relative;
+  z-index: 1;
+}
+
+.workout-calendar .workout-indicator {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: grid;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  place-items: center;
+  border-radius: 999px;
+  border: 2px solid rgba(15, 23, 42, 0.95);
+  background: #10b981;
+  color: #022c22;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(2, 6, 23, 0.45);
+  pointer-events: none;
+}
+
+.workout-calendar .react-calendar__tile--active .workout-indicator {
+  border-color: rgba(37, 99, 235, 0.95);
+  background: #ecfeff;
+  color: #075985;
+}
+
+.workout-calendar .react-calendar__year-view__months,
+.workout-calendar .react-calendar__decade-view__years,
+.workout-calendar .react-calendar__century-view__decades {
+  gap: 6px;
+}
+
+.workout-calendar .react-calendar__year-view__months__month,
+.workout-calendar .react-calendar__decade-view__years__year,
+.workout-calendar .react-calendar__century-view__decades__decade {
+  min-height: 52px;
+}
+
+@media (max-width: 380px) {
+  .workout-calendar.react-calendar {
+    padding: 10px;
+  }
+
+  .workout-calendar .react-calendar__navigation {
+    gap: 6px;
+  }
+
+  .workout-calendar .react-calendar__navigation button {
+    min-width: 34px;
+    height: 36px;
+    border-radius: 12px;
+    font-size: 16px;
+  }
+
+  .workout-calendar .react-calendar__navigation__label {
+    font-size: 16px !important;
+  }
+
+  .workout-calendar .react-calendar__tile {
+    --tile-radius: 14px;
+    min-height: 42px;
+    font-size: 14px;
+  }
+}

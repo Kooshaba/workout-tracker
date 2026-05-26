@@ -1,24 +1,14 @@
-import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { format } from "date-fns";
-import { Workout } from "../types/workout";
 import { useI18n } from "../i18nContext";
+import { useWorkoutHistory } from "../context/useWorkoutHistory";
 
 export function WorkoutDetails() {
   const { t, dateLocale } = useI18n();
   const { id } = useParams();
   const navigate = useNavigate();
-  const [workout, setWorkout] = useState<Workout | null>(null);
-
-  useEffect(() => {
-    const workouts: Workout[] = JSON.parse(
-      localStorage.getItem("workoutHistory") || "[]"
-    );
-    const foundWorkout = workouts.find((w) => w.id === id);
-    if (foundWorkout) {
-      setWorkout(foundWorkout);
-    }
-  }, [id]);
+  const { workouts } = useWorkoutHistory();
+  const workout = workouts.find((w) => w.id === id) ?? null;
 
   if (!workout) {
     return (

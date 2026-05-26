@@ -1,0 +1,8 @@
+name = "workouts-api"
+main = "worker/index.ts"
+compatibility_date = "2026-05-26"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "workouts"
+database_id = "replace-with-your-d1-database-id"
