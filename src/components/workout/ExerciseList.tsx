@@ -6,6 +6,8 @@ import {
 } from "../../types/workout";
 import { useEffect, useRef, useState } from "react";
 import { ExerciseItem } from "./ExerciseItem";
+import { groupBySuperset, getSupersetIds } from "../../utils/supersetUtils";
+import { useI18n } from "../../i18nContext";
 
 type Props = {
   exercises: WorkoutExercise[];
@@ -20,6 +22,7 @@ export function ExerciseList({
   onUpdate,
   onTimerStart,
 }: Props) {
+  const { t } = useI18n();
   const lastSetRef = useRef<HTMLInputElement>(null);
   const previousExerciseIdsRef = useRef<string[]>(exercises.map((exercise) => exercise.id));
   const [animatedExerciseIds, setAnimatedExerciseIds] = useState<string[]>([]);
@@ -27,6 +30,9 @@ export function ExerciseList({
     exerciseId: string;
     setIndex: number;
   } | null>(null);
+
+  const supersetIds = getSupersetIds(exercises);
+  const exerciseGroups = groupBySuperset(exercises);
 
   useEffect(() => {
     const nextExerciseIds = exercises.map((exercise) => exercise.id);
@@ -194,27 +200,112 @@ export function ExerciseList({
     onUpdate(newExercises);
   };
 
+  const handleUpdateSuperset = (exerciseIndex: number, supersetId: string) => {
+    const newExercises = [...exercises];
+    newExercises[exerciseIndex] = {
+      ...newExercises[exerciseIndex],
+      supersetId:
+        supersetId === "new" ? `superset-${Date.now()}` : supersetId || undefined,
+    };
+    onUpdate(newExercises);
+  };
+
+  const handleUpdateSupersetGroup = (
+    currentSupersetId: string,
+    nextSupersetId: string
+  ) => {
+    const resolvedSupersetId =
+      nextSupersetId === "new" ? `superset-${Date.now()}` : nextSupersetId;
+    onUpdate(
+      exercises.map((exercise) =>
+        exercise.supersetId === currentSupersetId
+          ? { ...exercise, supersetId: resolvedSupersetId || undefined }
+          : exercise
+      )
+    );
+  };
+
+  const supersetLabel = (supersetId: string) =>
+    t("superset.label", { number: supersetIds.indexOf(supersetId) + 1 });
+
   return (
     <div className="space-y-4">
-      {exercises.map((exercise, exerciseIndex) => (
-        <ExerciseItem
-          key={exercise.id}
-          exercise={exercise}
-          exerciseIndex={exerciseIndex}
-          onUpdateStrengthSet={handleUpdateStrengthSet}
-          onUpdateCardioSession={handleUpdateCardioSession}
-          onAddSet={handleAddSet}
-          onRemoveSet={handleRemoveSet}
-          onRemoveExercise={handleRemoveExercise}
-          onTimerStart={onTimerStart}
-          getLastCompletedSet={getLastCompletedSet}
-          onUpdateNotes={handleUpdateExerciseNotes}
-          animateIn={animatedExerciseIds.includes(exercise.id)}
-          animatedSetIndex={
-            animatedSet?.exerciseId === exercise.id ? animatedSet.setIndex : null
-          }
-        />
-      ))}
+      {exerciseGroups.map((group) => {
+        if (group.kind === "single") {
+          return (
+            <ExerciseItem
+              key={group.item.id}
+              exercise={group.item}
+              exerciseIndex={group.index}
+              onUpdateStrengthSet={handleUpdateStrengthSet}
+              onUpdateCardioSession={handleUpdateCardioSession}
+              onAddSet={handleAddSet}
+              onRemoveSet={handleRemoveSet}
+              onRemoveExercise={handleRemoveExercise}
+              onTimerStart={onTimerStart}
+              getLastCompletedSet={getLastCompletedSet}
+              onUpdateNotes={handleUpdateExerciseNotes}
+              onUpdateSuperset={handleUpdateSuperset}
+              supersetIds={supersetIds}
+              animateIn={animatedExerciseIds.includes(group.item.id)}
+              animatedSetIndex={
+                animatedSet?.exerciseId === group.item.id
+                  ? animatedSet.setIndex
+                  : null
+              }
+            />
+          );
+        }
+
+        return (
+          <div
+            key={group.supersetId}
+            className={`space-y-3 rounded-lg border-l-4 ${group.color.border} ${group.color.bg} p-3`}
+          >
+            <select
+              aria-label={t("superset.title")}
+              value={group.supersetId}
+              onChange={(event) =>
+                handleUpdateSupersetGroup(group.supersetId, event.target.value)
+              }
+              className={`w-full rounded-lg border px-3 py-2 text-sm font-semibold ${group.color.badge}`}
+            >
+              <option value="">{t("superset.none")}</option>
+              {supersetIds.map((supersetId) => (
+                <option key={supersetId} value={supersetId}>
+                  {supersetLabel(supersetId)}
+                </option>
+              ))}
+              <option value="new">{t("superset.new")}</option>
+            </select>
+            {group.items.map(({ item: exercise, index: exerciseIndex }) => (
+              <ExerciseItem
+                key={exercise.id}
+                exercise={exercise}
+                exerciseIndex={exerciseIndex}
+                onUpdateStrengthSet={handleUpdateStrengthSet}
+                onUpdateCardioSession={handleUpdateCardioSession}
+                onAddSet={handleAddSet}
+                onRemoveSet={handleRemoveSet}
+                onRemoveExercise={handleRemoveExercise}
+                onTimerStart={onTimerStart}
+                getLastCompletedSet={getLastCompletedSet}
+                onUpdateNotes={handleUpdateExerciseNotes}
+                onUpdateSuperset={handleUpdateSuperset}
+                supersetIds={supersetIds}
+                supersetColor={group.color}
+                showSupersetControl={false}
+                animateIn={animatedExerciseIds.includes(exercise.id)}
+                animatedSetIndex={
+                  animatedSet?.exerciseId === exercise.id
+                    ? animatedSet.setIndex
+                    : null
+                }
+              />
+            ))}
+          </div>
+        );
+      })}
     </div>
   );
 }

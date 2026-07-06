@@ -1,4 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+  ArrowsPointingInIcon,
+  ArrowsPointingOutIcon,
+  CheckIcon,
+  ClockIcon,
+} from "@heroicons/react/24/outline";
 import { useRestTimer } from "../../context/RestTimerContext";
 import { playRestTimerDoneSound } from "../../utils/restTimerAudio";
 import { useI18n } from "../../i18nContext";
@@ -16,6 +22,7 @@ function formatTime(totalSeconds: number) {
 
 export function RestTimer() {
   const { t } = useI18n();
+  const [isMinimized, setIsMinimized] = useState(true);
   const {
     state,
     remainingSeconds,
@@ -28,6 +35,12 @@ export function RestTimer() {
     adjustTime,
   } = useRestTimer();
   const wasExpiredRef = useRef(state.isExpired);
+
+  useEffect(() => {
+    if (!state.isOpen) {
+      setIsMinimized(true);
+    }
+  }, [state.isOpen]);
 
   useEffect(() => {
     if (!state.isExpired || wasExpiredRef.current) {
@@ -64,17 +77,65 @@ export function RestTimer() {
     : state.isActive
       ? t("timer.pause")
       : t("timer.resume");
+  const confirmTimer = isExpired ? acknowledge : close;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-24 z-50 px-4">
+    <div className="pointer-events-none fixed inset-x-0 bottom-28 z-50 px-4">
       <section
-        className={`pointer-events-auto mx-auto w-full max-w-md overflow-hidden rounded-[2rem] border p-4 shadow-2xl backdrop-blur transition-all duration-300 ${
+        className={`pointer-events-auto mx-auto w-full overflow-hidden border shadow-2xl backdrop-blur transition-all duration-300 ${
+          isMinimized ? "max-w-xs rounded-3xl p-3" : "max-w-md rounded-[2rem] p-4"
+        } ${
           isExpired
             ? "border-emerald-300/50 bg-emerald-950/95 text-emerald-50"
             : "border-slate-700/80 bg-slate-950/95 text-slate-50"
         }`}
         aria-label={t("exercise.restTitle")}
       >
+        {isMinimized ? (
+          <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-3">
+            <div
+              className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${
+                isExpired ? "bg-emerald-900/70 text-emerald-100" : "bg-slate-900 text-sky-200"
+              }`}
+              aria-hidden="true"
+            >
+              <ClockIcon className="h-6 w-6" />
+            </div>
+
+            <div className="min-w-0">
+              <p
+                className="text-2xl font-black leading-none tabular-nums"
+                aria-live={isExpired ? "assertive" : "polite"}
+              >
+                {formatTime(remainingSeconds)}
+              </p>
+            </div>
+
+            <button
+              onClick={() => setIsMinimized(false)}
+              className={`grid h-11 w-11 place-items-center rounded-full border border-white/10 transition-all duration-200 hover:bg-white/10 active:scale-95 ${
+                isExpired ? "text-emerald-100" : "text-slate-200"
+              }`}
+              aria-label={t("timer.maximizeLabel")}
+              title={t("timer.maximizeLabel")}
+            >
+              <ArrowsPointingOutIcon className="h-5 w-5" />
+            </button>
+
+            <button
+              onClick={confirmTimer}
+              className={`grid h-11 w-11 place-items-center rounded-full border transition-all duration-200 active:scale-95 ${
+                isExpired
+                  ? "border-emerald-200/30 bg-emerald-300 text-emerald-950 hover:bg-emerald-200"
+                  : "border-sky-200/30 bg-sky-300 text-sky-950 hover:bg-sky-200"
+              }`}
+              aria-label={t("timer.confirmLabel")}
+              title={t("timer.confirmLabel")}
+            >
+              <CheckIcon className="h-5 w-5" />
+            </button>
+          </div>
+        ) : (
         <div className="flex items-center gap-4">
           <button
             onClick={isExpired ? restart : toggleStartPause}
@@ -148,15 +209,27 @@ export function RestTimer() {
                   {state.exerciseName || t("exercise.rest")}
                 </h2>
               </div>
-              <button
-                onClick={isExpired ? acknowledge : close}
-                className={`rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold transition-all duration-200 hover:bg-white/10 hover:text-white active:scale-95 ${
-                  isExpired ? "text-emerald-100/80" : "text-slate-300"
-                }`}
-                aria-label={t("timer.closeLabel")}
-              >
-                {t("common.close")}
-              </button>
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  onClick={() => setIsMinimized(true)}
+                  className={`grid h-8 w-8 place-items-center rounded-full border border-white/10 transition-all duration-200 hover:bg-white/10 hover:text-white active:scale-95 ${
+                    isExpired ? "text-emerald-100/80" : "text-slate-300"
+                  }`}
+                  aria-label={t("timer.minimizeLabel")}
+                  title={t("timer.minimizeLabel")}
+                >
+                  <ArrowsPointingInIcon className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={confirmTimer}
+                  className={`rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold transition-all duration-200 hover:bg-white/10 hover:text-white active:scale-95 ${
+                    isExpired ? "text-emerald-100/80" : "text-slate-300"
+                  }`}
+                  aria-label={t("timer.closeLabel")}
+                >
+                  {t("common.close")}
+                </button>
+              </div>
             </div>
 
             <p
@@ -228,6 +301,7 @@ export function RestTimer() {
             )}
           </div>
         </div>
+        )}
       </section>
     </div>
   );

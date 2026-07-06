@@ -66,6 +66,8 @@ export function WorkoutLog() {
         id: Date.now().toString(),
         name: exercise.name,
         exerciseId: exercise.id,
+        supersetId: exercise.supersetId,
+        notes: exercise.notes || "",
         sets:
           exercise.type === "strength"
             ? [
@@ -98,7 +100,14 @@ export function WorkoutLog() {
   };
 
   return (
-    <div className="pb-20 p-4">
+    <div
+      className={`p-4 ${currentWorkout ? "pb-40" : "pb-24"}`}
+      style={{
+        paddingBottom: currentWorkout
+          ? "calc(10rem + env(safe-area-inset-bottom))"
+          : "calc(6rem + env(safe-area-inset-bottom))",
+      }}
+    >
       {!currentWorkout ? (
         <div className="space-y-4">
           <div className="space-y-2">

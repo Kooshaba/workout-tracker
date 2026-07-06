@@ -13,6 +13,7 @@ import { CalendarPage } from "./pages/Calendar";
 import { WorkoutDetails } from "./pages/WorkoutDetails";
 import { ExerciseHistory } from "./pages/ExerciseHistory";
 import { Coach } from "./pages/Coach";
+import { Profile } from "./pages/Profile";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
                     <Route path="/templates" element={<Templates />} />
                     <Route path="/calendar" element={<CalendarPage />} />
                     <Route path="/coach" element={<Coach />} />
+                    <Route path="/profile" element={<Profile />} />
                     <Route path="/workout/:id" element={<WorkoutDetails />} />
                     <Route path="/exercise/:name" element={<ExerciseHistory />} />
                   </Routes>

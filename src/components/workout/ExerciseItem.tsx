@@ -3,6 +3,7 @@ import {
   StrengthSet,
   CardioSession,
 } from "../../types/workout";
+import type { SupersetColor } from "../../utils/supersetUtils";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "../../i18nContext";
@@ -25,6 +26,10 @@ type Props = {
   onTimerStart: (exerciseName: string) => void;
   getLastCompletedSet: (exerciseName: string) => StrengthSet | null;
   onUpdateNotes: (exerciseIndex: number, notes: string) => void;
+  onUpdateSuperset: (exerciseIndex: number, supersetId: string) => void;
+  supersetIds: string[];
+  supersetColor?: SupersetColor;
+  showSupersetControl?: boolean;
   animateIn: boolean;
   animatedSetIndex: number | null;
 };
@@ -40,6 +45,10 @@ export function ExerciseItem({
   onTimerStart,
   getLastCompletedSet,
   onUpdateNotes,
+  onUpdateSuperset,
+  supersetIds,
+  supersetColor,
+  showSupersetControl = true,
   animateIn,
   animatedSetIndex,
 }: Props) {
@@ -86,9 +95,14 @@ export function ExerciseItem({
     return !Array.isArray(exercise.sets);
   };
 
+  const supersetLabel = (supersetId: string) =>
+    t("superset.label", { number: supersetIds.indexOf(supersetId) + 1 });
+
   return (
     <div
       className={`border rounded-lg p-4 transition-all duration-300 ease-out motion-reduce:transition-none ${
+        exercise.supersetId ? `border-l-4 ${supersetColor?.border || "border-l-sky-500"}` : ""
+      } ${
         animateIn
           ? isExerciseVisible
             ? "translate-y-0 opacity-100"
@@ -158,6 +172,33 @@ export function ExerciseItem({
           </button>
         </div>
       </div>
+
+      {showSupersetControl && (
+        <div className="mb-4 grid gap-2 sm:grid-cols-[auto_1fr] sm:items-center">
+          <label
+            htmlFor={`superset-${exercise.id}`}
+            className="text-sm font-medium text-gray-700"
+          >
+            {t("superset.title")}
+          </label>
+          <select
+            id={`superset-${exercise.id}`}
+            value={exercise.supersetId || ""}
+            onChange={(event) =>
+              onUpdateSuperset(exerciseIndex, event.target.value)
+            }
+            className="w-full border rounded-lg px-3 py-2 text-sm"
+          >
+            <option value="">{t("superset.none")}</option>
+            {supersetIds.map((supersetId) => (
+              <option key={supersetId} value={supersetId}>
+                {supersetLabel(supersetId)}
+              </option>
+            ))}
+            <option value="new">{t("superset.new")}</option>
+          </select>
+        </div>
+      )}
 
       {isStrengthExercise(exercise) && (
         <div className="space-y-2">

@@ -3,6 +3,7 @@ export type Exercise = {
   name: string;
   type: "strength" | "cardio";
   notes?: string;
+  supersetId?: string;
 };
 
 export type StrengthSet = {
@@ -23,6 +24,7 @@ export type WorkoutExercise = {
   exerciseId: string;
   sets: StrengthSet[] | CardioSession;
   notes?: string;
+  supersetId?: string;
 };
 
 export type Workout = {

@@ -12,6 +12,7 @@ export function Navigation() {
     { path: "/templates", label: t("nav.templates"), icon: "📋" },
     { path: "/calendar", label: t("nav.calendar"), icon: "📅" },
     { path: "/coach", label: t("nav.coach"), icon: "🧠" },
+    { path: "/profile", label: t("nav.profile"), icon: "👤" },
   ];
 
   return (

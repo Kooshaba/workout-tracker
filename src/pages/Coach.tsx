@@ -1,6 +1,11 @@
 import { useMemo, useState } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
-import { Workout, WorkoutExercise, StrengthSet, CardioSession } from "../types/workout";
+import {
+  Workout,
+  WorkoutExercise,
+  StrengthSet,
+  CardioSession,
+} from "../types/workout";
 import { useI18n } from "../i18nContext";
 
 type Recommendation = {
@@ -15,6 +20,15 @@ type CoachResponse = {
 };
 
 type Translate = ReturnType<typeof useI18n>["t"];
+
+const DEFAULT_COACH_MODEL = "gpt-5.5";
+
+const coachModels = [
+  { value: "gpt-5.5", labelKey: "coach.modelGpt55" },
+  { value: "gpt-4.1-mini", labelKey: "coach.modelGpt41Mini" },
+  { value: "gpt-4o", labelKey: "coach.modelGpt4o" },
+  { value: "gpt-4o-mini", labelKey: "coach.modelGpt4oMini" },
+] as const;
 
 const coachResponseSchema = {
   type: "object",
@@ -182,15 +196,24 @@ function makeExercise(rec: Recommendation, t: Translate): WorkoutExercise {
 
 export function Coach() {
   const { language, t } = useI18n();
-  const [currentWorkout, setCurrentWorkout] = useLocalStorage<Workout | null>("currentWorkout", null);
+  const [currentWorkout, setCurrentWorkout] = useLocalStorage<Workout | null>(
+    "currentWorkout",
+    null
+  );
   const [apiKey, setApiKey] = useLocalStorage<string>("coachApiKey", "");
-  const [model, setModel] = useLocalStorage<string>("coachModel", "gpt-4o-mini");
+  const [model, setModel] = useLocalStorage<string>(
+    "coachModel",
+    DEFAULT_COACH_MODEL
+  );
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<CoachResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const snapshot = useMemo(() => workoutSnapshot(currentWorkout, t), [currentWorkout, t]);
+  const snapshot = useMemo(
+    () => workoutSnapshot(currentWorkout, t),
+    [currentWorkout, t]
+  );
 
   async function askCoach() {
     const q = question.trim() || t("coach.askDefault");
@@ -224,7 +247,10 @@ export function Coach() {
 
   function addRecommendation(rec: Recommendation) {
     if (!currentWorkout) return;
-    const next = { ...currentWorkout, exercises: [...currentWorkout.exercises, makeExercise(rec, t)] };
+    const next = {
+      ...currentWorkout,
+      exercises: [...currentWorkout.exercises, makeExercise(rec, t)],
+    };
     setCurrentWorkout(next);
   }
 
@@ -237,30 +263,59 @@ export function Coach() {
         <pre className="text-xs whitespace-pre-wrap text-gray-600">{snapshot}</pre>
       </div>
 
-      <div className="space-y-2 rounded-lg border p-3">
-        <div className="text-sm font-semibold">{t("coach.connectionTitle")}</div>
-        <input
-          type="password"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          placeholder={t("coach.apiKeyPlaceholder")}
-          className="w-full border rounded-lg px-3 py-2"
-        />
-        <select
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2"
-        >
-          <option value="gpt-5.5">gpt-5.5</option>
-          <option value="gpt-4o-mini">gpt-4o-mini</option>
-          <option value="gpt-4o">gpt-4o</option>
-          <option value="gpt-4.1-mini">gpt-4.1-mini</option>
-        </select>
-        <p className="text-xs text-gray-500">{t("coach.storageNote")}</p>
+      <div className="space-y-4 rounded-lg border p-3">
+        <div className="space-y-1">
+          <h2 className="text-sm font-semibold">{t("coach.connectionTitle")}</h2>
+          <p className="text-xs text-gray-500">{t("coach.connectionHelp")}</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <label
+            htmlFor="coach-api-key"
+            className="block text-xs font-semibold text-gray-700"
+          >
+            {t("coach.apiKeyLabel")}
+          </label>
+          <input
+            id="coach-api-key"
+            type="password"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder={t("coach.apiKeyPlaceholder")}
+            autoComplete="off"
+            className="w-full border rounded-lg px-3 py-2"
+          />
+          <p className="text-xs text-gray-500">{t("coach.apiKeyHelp")}</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <label
+            htmlFor="coach-model"
+            className="block text-xs font-semibold text-gray-700"
+          >
+            {t("coach.modelLabel")}
+          </label>
+          <select
+            id="coach-model"
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            className="w-full border rounded-lg px-3 py-2"
+          >
+            {coachModels.map((option) => (
+              <option key={option.value} value={option.value}>
+                {t(option.labelKey)}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-500">{t("coach.modelHelp")}</p>
+        </div>
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="coach-question" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="coach-question"
+          className="block text-sm font-medium text-gray-700"
+        >
           {t("coach.askLabel")}
         </label>
         <textarea

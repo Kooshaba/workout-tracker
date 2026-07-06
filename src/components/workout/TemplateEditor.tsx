@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { WorkoutTemplate } from "../../types/workout";
 import { useI18n } from "../../i18nContext";
+import { groupBySuperset, getSupersetIds } from "../../utils/supersetUtils";
 
 type Props = {
   template: WorkoutTemplate;
@@ -13,6 +14,44 @@ export function TemplateEditor({ template, onSave, onCancel }: Props) {
   const [name, setName] = useState(template.name);
   const [exercises, setExercises] = useState(template.exercises);
 
+  const supersetIds = getSupersetIds(exercises);
+  const exerciseGroups = groupBySuperset(exercises);
+
+  const supersetLabel = (supersetId: string) =>
+    t("superset.label", { number: supersetIds.indexOf(supersetId) + 1 });
+
+  const updateSuperset = (index: number, supersetId: string) => {
+    setExercises((currentExercises) =>
+      currentExercises.map((exercise, exerciseIndex) =>
+        exerciseIndex === index
+          ? {
+              ...exercise,
+              supersetId:
+                supersetId === "new"
+                  ? `superset-${Date.now()}`
+                  : supersetId || undefined,
+            }
+          : exercise
+      )
+    );
+  };
+
+  const updateSupersetGroup = (
+    currentSupersetId: string,
+    nextSupersetId: string
+  ) => {
+    const resolvedSupersetId =
+      nextSupersetId === "new" ? `superset-${Date.now()}` : nextSupersetId;
+
+    setExercises((currentExercises) =>
+      currentExercises.map((exercise) =>
+        exercise.supersetId === currentSupersetId
+          ? { ...exercise, supersetId: resolvedSupersetId || undefined }
+          : exercise
+      )
+    );
+  };
+
   const handleSave = () => {
     onSave({
       ...template,
@@ -22,6 +61,7 @@ export function TemplateEditor({ template, onSave, onCancel }: Props) {
         name: exercise.name,
         type: exercise.type,
         notes: exercise.notes || "",
+        supersetId: exercise.supersetId,
       })),
     });
   };
@@ -50,25 +90,83 @@ export function TemplateEditor({ template, onSave, onCancel }: Props) {
           <label className="block text-sm font-medium">
             {t("common.exercises")}
           </label>
-          {exercises.map((exercise, index) => (
-            <div
-              key={exercise.id}
-              className="flex justify-between items-center p-2 border rounded"
-            >
-              <div>
-                <div className="font-medium">{exercise.name}</div>
-                <div className="text-sm text-gray-500 capitalize">
-                  {t(`exerciseType.${exercise.type}`)}
+          {exerciseGroups.map((group) => {
+            const renderExercise = (
+              exercise: (typeof exercises)[number],
+              index: number,
+              showSupersetControl = true
+            ) => (
+              <div key={exercise.id} className="space-y-2 p-2 border rounded">
+                <div className="flex justify-between items-start gap-3">
+                  <div>
+                    <div className="font-medium">{exercise.name}</div>
+                    <div className="text-sm text-gray-500 capitalize">
+                      {t(`exerciseType.${exercise.type}`)}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => removeExercise(index)}
+                    className="text-rose-300 transition-colors hover:text-rose-100"
+                  >
+                    {t("common.remove")}
+                  </button>
                 </div>
+                {showSupersetControl && (
+                  <>
+                    <label className="block text-xs font-medium text-gray-600">
+                      {t("superset.title")}
+                    </label>
+                    <select
+                      value={exercise.supersetId || ""}
+                      onChange={(event) =>
+                        updateSuperset(index, event.target.value)
+                      }
+                      className="w-full border rounded-lg px-3 py-2 text-sm"
+                    >
+                      <option value="">{t("superset.none")}</option>
+                      {supersetIds.map((supersetId) => (
+                        <option key={supersetId} value={supersetId}>
+                          {supersetLabel(supersetId)}
+                        </option>
+                      ))}
+                      <option value="new">{t("superset.new")}</option>
+                    </select>
+                  </>
+                )}
               </div>
-              <button
-                onClick={() => removeExercise(index)}
-                className="text-rose-300 transition-colors hover:text-rose-100"
+            );
+
+            if (group.kind === "single") {
+              return renderExercise(group.item, group.index);
+            }
+
+            return (
+              <div
+                key={group.supersetId}
+                className={`space-y-2 rounded-lg border-l-4 ${group.color.border} ${group.color.bg} p-2`}
               >
-                {t("common.remove")}
-              </button>
-            </div>
-          ))}
+                <select
+                  aria-label={t("superset.title")}
+                  value={group.supersetId}
+                  onChange={(event) =>
+                    updateSupersetGroup(group.supersetId, event.target.value)
+                  }
+                  className={`w-full rounded-lg border px-3 py-2 text-sm font-semibold ${group.color.badge}`}
+                >
+                  <option value="">{t("superset.none")}</option>
+                  {supersetIds.map((supersetId) => (
+                    <option key={supersetId} value={supersetId}>
+                      {supersetLabel(supersetId)}
+                    </option>
+                  ))}
+                  <option value="new">{t("superset.new")}</option>
+                </select>
+                {group.items.map(({ item, index }) =>
+                  renderExercise(item, index, false)
+                )}
+              </div>
+            );
+          })}
         </div>
 
         <div className="flex justify-end space-x-2">

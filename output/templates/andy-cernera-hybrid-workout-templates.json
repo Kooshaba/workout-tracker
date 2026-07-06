@@ -1,0 +1,199 @@
+{
+  "version": 1,
+  "templates": [
+    {
+      "id": "push-hybrid-mobility-focused-2026-07-07",
+      "name": "Push Hybrid - Mobility Focused",
+      "exercises": [
+        {
+          "id": "push-dumbbell-bench-press",
+          "name": "Dumbbell Bench Press",
+          "type": "strength",
+          "superset": "push-a",
+          "notes": "3 sets x 6-8 reps. Rest 0s before the next movement. You can do incline if you want."
+        },
+        {
+          "id": "push-atg-pigeon-pose",
+          "name": "ATG Pigeon Pose",
+          "type": "strength",
+          "superset": "push-a",
+          "notes": "3 sets x 5 reps each side. Rest 90s after the movement. Start on the incline bench and work your way down over time. Use your hands to take weight off while loading the stretched muscle."
+        },
+        {
+          "id": "push-dumbbell-seated-shoulder-press",
+          "name": "Dumbbell Seated Shoulder Press",
+          "type": "strength",
+          "superset": "push-b",
+          "notes": "3 sets x 6-8 reps. Rest 0s before the next movement."
+        },
+        {
+          "id": "push-couch-stretch",
+          "name": "Couch Stretch",
+          "type": "strength",
+          "superset": "push-b",
+          "notes": "3 sets x 20 sec each side. Rest 90s after the movement. You can do this on the same bench as shoulder press and use the back as a wall to press your shin into."
+        },
+        {
+          "id": "push-parallel-bar-dip",
+          "name": "Parallel Bar Dip",
+          "type": "strength",
+          "superset": "push-c",
+          "notes": "3 sets x 6-10 reps. Rest 0s before the next movement."
+        },
+        {
+          "id": "push-shoulder-dislocation",
+          "name": "Shoulder Dislocation",
+          "type": "strength",
+          "superset": "push-c",
+          "notes": "3 sets x 10 reps. Rest 90s after the movement."
+        },
+        {
+          "id": "push-back-bridge-progression",
+          "name": "Back Bridge Progression",
+          "type": "strength",
+          "notes": "3 sets x 10 sec. Rest 90s. Aim for the full level 3 hold; use video guidance if needed. Range is 5-10 second holds."
+        },
+        {
+          "id": "push-banded-kettlebell-russian-swing",
+          "name": "Banded Kettlebell Russian Swing",
+          "type": "strength",
+          "notes": "10 min EMOM. Do 30 reps every minute on the minute for 10 minutes. Rest until the next minute starts. Go super light and use a super light band."
+        }
+      ]
+    },
+    {
+      "id": "pull-hybrid-2026-07-11",
+      "name": "Pull Hybrid",
+      "exercises": [
+        {
+          "id": "pull-pull-up",
+          "name": "Pull Up",
+          "type": "strength",
+          "notes": "3 sets x 6-8 reps. Rest 90s."
+        },
+        {
+          "id": "pull-cable-seated-row",
+          "name": "Cable Seated Row",
+          "type": "strength",
+          "notes": "3 sets x 6-8 reps. Rest 90s. Find the stretch on the negative before pulling again."
+        },
+        {
+          "id": "pull-front-lever-progression",
+          "name": "Front Lever Progression",
+          "type": "strength",
+          "superset": "pull-a",
+          "notes": "3 sets x 8-12 reps. Rest 15s before the next movement."
+        },
+        {
+          "id": "pull-body-weight-cossack-squat",
+          "name": "Body Weight Cossack Squat",
+          "type": "strength",
+          "superset": "pull-a",
+          "notes": "3 sets x 10 reps each side. Rest 90s after the movement. Look for the stretch at the bottom; use a wall or stick for assistance if needed."
+        },
+        {
+          "id": "pull-cable-standing-external-shoulder-rotation",
+          "name": "Cable Standing External Shoulder Rotation",
+          "type": "strength",
+          "superset": "pull-b",
+          "notes": "3 sets x 12-15 reps each side. Rest 10s before the next movement."
+        },
+        {
+          "id": "pull-cable-internal-shoulder-rotation",
+          "name": "Cable Internal Shoulder Rotation",
+          "type": "strength",
+          "superset": "pull-b",
+          "notes": "3 sets x 12-15 reps each side. Rest 60s after the movement."
+        },
+        {
+          "id": "pull-dumbbell-bent-arm-pullover",
+          "name": "Dumbbell Bent Arm Pullover",
+          "type": "strength",
+          "notes": "3 sets x 8-12 reps. Rest 90s."
+        },
+        {
+          "id": "pull-active-bar-hang",
+          "name": "Active Bar Hang",
+          "type": "strength",
+          "superset": "pull-c",
+          "notes": "3 sets x 30 sec. Rest 0s before the next movement. Work for 30-60 sec."
+        },
+        {
+          "id": "pull-elephant-walk",
+          "name": "Elephant Walk",
+          "type": "strength",
+          "superset": "pull-c",
+          "notes": "3 sets x 10 reps each side. Rest 30s after the movement."
+        }
+      ]
+    },
+    {
+      "id": "leg-hybrid-hip-mobility-focused-2026-07-16",
+      "name": "Leg Hybrid - Hip Mobility Focused",
+      "exercises": [
+        {
+          "id": "leg-barbell-zercher-squat",
+          "name": "Barbell Zercher Squat",
+          "type": "strength",
+          "superset": "leg-a",
+          "notes": "3 sets x 3-5 reps. Rest 30s before the next movement."
+        },
+        {
+          "id": "leg-jump-squats",
+          "name": "Jump Squats",
+          "type": "strength",
+          "superset": "leg-a",
+          "notes": "3 sets x 5 reps. Rest 90s after the movement. Jump as high and explosively as you can while still controlling the landing."
+        },
+        {
+          "id": "leg-barbell-romanian-deadlift",
+          "name": "Barbell Romanian Deadlift",
+          "type": "strength",
+          "notes": "3 sets x 3-5 reps. Rest 90s. Stand with barbell in overhand grip, feet hip-width apart. Lower the bar by pushing hips back, keeping bar close to body. Return to starting position."
+        },
+        {
+          "id": "leg-bodyweight-atg-split-squat",
+          "name": "Bodyweight ATG Split Squat",
+          "type": "strength",
+          "superset": "leg-b",
+          "notes": "3 sets x 6-8 reps each side. Rest 90s before the next movement."
+        },
+        {
+          "id": "leg-dumbbell-jefferson-curl",
+          "name": "Dumbbell Jefferson Curl",
+          "type": "strength",
+          "superset": "leg-b",
+          "notes": "3 sets x 6-8 reps. Rest 30s after the movement. Follow the progression in the video if this feels very hard to do with just bodyweight."
+        },
+        {
+          "id": "leg-roman-chair-back-extensions",
+          "name": "Roman Chair Back Extensions",
+          "type": "strength",
+          "superset": "leg-c",
+          "notes": "3 sets x 10-12 reps. Rest 30s before the next movement. Lock knees, hip hinge only. Send your butt up and back."
+        },
+        {
+          "id": "leg-ql-raise",
+          "name": "QL Raise",
+          "type": "strength",
+          "superset": "leg-c",
+          "notes": "3 sets x 10-12 reps each side."
+        },
+        {
+          "id": "leg-body-weight-deficit-calf-raise",
+          "name": "Body Weight Deficit Calf Raise",
+          "type": "strength",
+          "superset": "leg-d",
+          "notes": "3 sets x 10-15 reps."
+        },
+        {
+          "id": "leg-tibialis-loading",
+          "name": "Tibialis Loading",
+          "type": "strength",
+          "superset": "leg-d",
+          "notes": "3 sets x 10-15 reps each side. Rest 60s after the movement."
+        }
+      ]
+    }
+  ]
+}
