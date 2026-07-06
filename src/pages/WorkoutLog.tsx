@@ -14,6 +14,18 @@ import { format } from "date-fns";
 import { useWorkoutHistory } from "../context/useWorkoutHistory";
 // Rest timer is rendered globally in App
 
+function getLocalDateInputValue(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getDateFromLocalInputValue(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export function WorkoutLog() {
   const { t, dateLocale } = useI18n();
   const { addWorkout, workouts } = useWorkoutHistory();
@@ -23,9 +35,7 @@ export function WorkoutLog() {
   );
   const [showTemplates, setShowTemplates] = useState(false);
   const { openForExercise } = useRestTimer();
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [selectedDate, setSelectedDate] = useState(() => getLocalDateInputValue());
   const [isWorkoutVisible, setIsWorkoutVisible] = useState(false);
   const currentWorkoutId = currentWorkout?.id;
 
@@ -44,7 +54,7 @@ export function WorkoutLog() {
   }, [currentWorkoutId]);
 
   const startNewWorkout = () => {
-    const workoutDate = new Date(selectedDate);
+    const workoutDate = getDateFromLocalInputValue(selectedDate);
     setCurrentWorkout({
       id: Date.now().toString(),
       date: workoutDate.toISOString(),
@@ -57,7 +67,7 @@ export function WorkoutLog() {
   };
 
   const startFromTemplate = (template: WorkoutTemplate) => {
-    const workoutDate = new Date(selectedDate);
+    const workoutDate = getDateFromLocalInputValue(selectedDate);
     setCurrentWorkout({
       id: Date.now().toString(),
       date: workoutDate.toISOString(),
