@@ -25,6 +25,12 @@ type PendingReorder = {
   cleanup: () => void;
 };
 
+type ActiveReorder = {
+  pointerId: number;
+  element: HTMLElement;
+  cleanup: () => void;
+};
+
 const LONG_PRESS_REORDER_DELAY_MS = 320;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 8;
 
@@ -67,10 +73,7 @@ export function ExerciseList({
   const dragOrderIndexesRef = useRef<number[]>([]);
   const compactRowRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const pendingReorderRef = useRef<PendingReorder | null>(null);
-  const activeReorderRef = useRef<{
-    pointerId: number;
-    element: HTMLElement;
-  } | null>(null);
+  const activeReorderRef = useRef<ActiveReorder | null>(null);
 
   const supersetIds = getSupersetIds(exercises);
   const exerciseGroups = groupBySuperset(exercises);
@@ -86,6 +89,17 @@ export function ExerciseList({
       pendingReorder.element.releasePointerCapture(pendingReorder.pointerId);
     }
     pendingReorderRef.current = null;
+  };
+
+  const clearActiveReorder = () => {
+    const activeReorder = activeReorderRef.current;
+    if (!activeReorder) return;
+
+    activeReorder.cleanup();
+    if (activeReorder.element.hasPointerCapture(activeReorder.pointerId)) {
+      activeReorder.element.releasePointerCapture(activeReorder.pointerId);
+    }
+    activeReorderRef.current = null;
   };
 
   useEffect(() => {
@@ -126,103 +140,9 @@ export function ExerciseList({
   }, [dragOrderIndexes]);
 
   useEffect(() => {
-    if (draggingExerciseIndex === null) return;
-
-    const preventNativeTouchScroll = (event: TouchEvent) => {
-      event.preventDefault();
-    };
-
-    const handlePointerMove = (event: PointerEvent) => {
-      if (event.pointerId !== activeReorderRef.current?.pointerId) return;
-
-      if (event.cancelable) {
-        event.preventDefault();
-      }
-
-      const pointerY = event.clientY;
-      setDragPointerY(pointerY);
-
-      setDragOrderIndexes((currentIndexes) => {
-        const currentIndex = currentIndexes.indexOf(draggingExerciseIndex);
-        if (currentIndex === -1) return currentIndexes;
-
-        const indexesWithoutDragged = currentIndexes.filter(
-          (index) => index !== draggingExerciseIndex
-        );
-        const targetIndex = indexesWithoutDragged.reduce(
-          (index, exerciseIndex) => {
-            const row = compactRowRefs.current.get(exerciseIndex);
-            if (!row) return index;
-
-            const rect = row.getBoundingClientRect();
-            return pointerY > rect.top + rect.height / 2 ? index + 1 : index;
-          },
-          0
-        );
-
-        if (targetIndex === currentIndex) return currentIndexes;
-
-        const nextIndexes = reorderItems(
-          currentIndexes,
-          currentIndex,
-          targetIndex
-        );
-        dragOrderIndexesRef.current = nextIndexes;
-        return nextIndexes;
-      });
-    };
-
-    const handlePointerUp = (event: PointerEvent) => {
-      const activeReorder = activeReorderRef.current;
-      if (!activeReorder || event.pointerId !== activeReorder.pointerId) return;
-
-      if (activeReorder.element.hasPointerCapture(activeReorder.pointerId)) {
-        activeReorder.element.releasePointerCapture(activeReorder.pointerId);
-      }
-      activeReorderRef.current = null;
-
-      const orderedExercises = dragOrderIndexesRef.current
-        .map((index) => exercises[index])
-        .filter((exercise): exercise is WorkoutExercise => Boolean(exercise));
-      const orderChanged = dragOrderIndexesRef.current.some(
-        (exerciseIndex, orderIndex) => exerciseIndex !== orderIndex
-      );
-
-      setDraggingExerciseIndex(null);
-      setDragOrderIndexes([]);
-      setDragPointerY(null);
-      compactRowRefs.current.clear();
-
-      if (orderChanged) {
-        onUpdate(orderedExercises);
-      }
-    };
-
-    window.addEventListener("pointermove", handlePointerMove, {
-      passive: false,
-    });
-    window.addEventListener("pointerup", handlePointerUp);
-    window.addEventListener("pointercancel", handlePointerUp);
-    window.addEventListener("touchmove", preventNativeTouchScroll, {
-      passive: false,
-    });
-
-    return () => {
-      const activeReorder = activeReorderRef.current;
-      if (activeReorder?.element.hasPointerCapture(activeReorder.pointerId)) {
-        activeReorder.element.releasePointerCapture(activeReorder.pointerId);
-      }
-      activeReorderRef.current = null;
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
-      window.removeEventListener("pointercancel", handlePointerUp);
-      window.removeEventListener("touchmove", preventNativeTouchScroll);
-    };
-  }, [draggingExerciseIndex, exercises, onUpdate]);
-
-  useEffect(() => {
     return () => {
       clearPendingReorder();
+      clearActiveReorder();
     };
   }, []);
 
@@ -401,24 +321,95 @@ export function ExerciseList({
     const pointerId = event.pointerId;
     const startX = event.clientX;
     const startY = event.clientY;
+    let isActiveReorder = false;
 
-    element.setPointerCapture(pointerId);
+    try {
+      element.setPointerCapture(pointerId);
+    } catch {
+      // Some mobile browsers decline capture for synthetic or interrupted touches.
+    }
 
-    const beginReorder = () => {
-      const pendingReorder = pendingReorderRef.current;
-      if (!pendingReorder || pendingReorder.pointerId !== pointerId) return;
+    const moveDraggedExercise = (pointerY: number) => {
+      setDragPointerY(pointerY);
 
-      const initialOrderIndexes = exercises.map((_, index) => index);
-      setDraggingExerciseIndex(exerciseIndex);
-      setDragPointerY(startY);
-      dragOrderIndexesRef.current = initialOrderIndexes;
-      activeReorderRef.current = { pointerId, element };
-      setDragOrderIndexes(initialOrderIndexes);
-      pendingReorderRef.current = null;
+      setDragOrderIndexes((currentIndexes) => {
+        const currentIndex = currentIndexes.indexOf(exerciseIndex);
+        if (currentIndex === -1) return currentIndexes;
+
+        const indexesWithoutDragged = currentIndexes.filter(
+          (index) => index !== exerciseIndex
+        );
+        const targetIndex = indexesWithoutDragged.reduce(
+          (index, nextExerciseIndex) => {
+            const row = compactRowRefs.current.get(nextExerciseIndex);
+            if (!row) return index;
+
+            const rect = row.getBoundingClientRect();
+            return pointerY > rect.top + rect.height / 2 ? index + 1 : index;
+          },
+          0
+        );
+
+        if (targetIndex === currentIndex) return currentIndexes;
+
+        const nextIndexes = reorderItems(
+          currentIndexes,
+          currentIndex,
+          targetIndex
+        );
+        dragOrderIndexesRef.current = nextIndexes;
+        return nextIndexes;
+      });
     };
 
-    const handlePendingPointerMove = (pointerEvent: PointerEvent) => {
+    const cleanupGestureListeners = () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerEnd);
+      window.removeEventListener("pointercancel", handlePointerEnd);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
+      document.removeEventListener("touchcancel", handleTouchEnd);
+    };
+
+    const finishReorder = () => {
+      const orderedExercises = dragOrderIndexesRef.current
+        .map((index) => exercises[index])
+        .filter((exercise): exercise is WorkoutExercise => Boolean(exercise));
+      const orderChanged = dragOrderIndexesRef.current.some(
+        (nextExerciseIndex, orderIndex) => nextExerciseIndex !== orderIndex
+      );
+
+      clearPendingReorder();
+      clearActiveReorder();
+      setDraggingExerciseIndex(null);
+      setDragOrderIndexes([]);
+      setDragPointerY(null);
+      compactRowRefs.current.clear();
+
+      if (orderChanged) {
+        onUpdate(orderedExercises);
+      }
+    };
+
+    const cancelReorder = () => {
+      clearPendingReorder();
+      clearActiveReorder();
+      setDraggingExerciseIndex(null);
+      setDragOrderIndexes([]);
+      setDragPointerY(null);
+      compactRowRefs.current.clear();
+    };
+
+    function handlePointerMove(pointerEvent: PointerEvent) {
       if (pointerEvent.pointerId !== pointerId) return;
+
+      if (isActiveReorder) {
+        if (pointerEvent.cancelable) {
+          pointerEvent.preventDefault();
+        }
+        moveDraggedExercise(pointerEvent.clientY);
+        return;
+      }
 
       const distance = Math.hypot(
         pointerEvent.clientX - startX,
@@ -426,35 +417,82 @@ export function ExerciseList({
       );
 
       if (distance > LONG_PRESS_MOVE_TOLERANCE_PX) {
-        cleanupPendingListeners();
-        clearPendingReorder();
+        cancelReorder();
       }
-    };
+    }
 
-    const handlePendingPointerEnd = (pointerEvent: PointerEvent) => {
+    function handlePointerEnd(pointerEvent: PointerEvent) {
       if (pointerEvent.pointerId !== pointerId) return;
 
-      clearPendingReorder();
+      if (isActiveReorder) {
+        finishReorder();
+      } else {
+        cancelReorder();
+      }
+    }
+
+    function handleTouchMove(touchEvent: TouchEvent) {
+      const touch = touchEvent.touches[0];
+      if (!touch) return;
+
+      if (isActiveReorder) {
+        if (touchEvent.cancelable) {
+          touchEvent.preventDefault();
+        }
+        moveDraggedExercise(touch.clientY);
+        return;
+      }
+
+      const distance = Math.hypot(touch.clientX - startX, touch.clientY - startY);
+      if (distance > LONG_PRESS_MOVE_TOLERANCE_PX) {
+        cancelReorder();
+      }
+    }
+
+    function handleTouchEnd() {
+      if (isActiveReorder) {
+        finishReorder();
+      } else {
+        cancelReorder();
+      }
+    }
+
+    const beginReorder = () => {
+      const pendingReorder = pendingReorderRef.current;
+      if (!pendingReorder || pendingReorder.pointerId !== pointerId) return;
+
+      const initialOrderIndexes = exercises.map((_, index) => index);
+      isActiveReorder = true;
+      setDraggingExerciseIndex(exerciseIndex);
+      setDragPointerY(startY);
+      dragOrderIndexesRef.current = initialOrderIndexes;
+      activeReorderRef.current = {
+        pointerId,
+        element,
+        cleanup: cleanupGestureListeners,
+      };
+      setDragOrderIndexes(initialOrderIndexes);
+      pendingReorderRef.current = null;
     };
 
-    const cleanupPendingListeners = () => {
-      window.removeEventListener("pointermove", handlePendingPointerMove);
-      window.removeEventListener("pointerup", handlePendingPointerEnd);
-      window.removeEventListener("pointercancel", handlePendingPointerEnd);
-    };
-
-    window.addEventListener("pointermove", handlePendingPointerMove);
-    window.addEventListener("pointerup", handlePendingPointerEnd);
-    window.addEventListener("pointercancel", handlePendingPointerEnd);
+    window.addEventListener("pointermove", handlePointerMove, {
+      passive: false,
+    });
+    window.addEventListener("pointerup", handlePointerEnd);
+    window.addEventListener("pointercancel", handlePointerEnd);
+    document.addEventListener("touchmove", handleTouchMove, {
+      passive: false,
+    });
+    document.addEventListener("touchend", handleTouchEnd);
+    document.addEventListener("touchcancel", handleTouchEnd);
 
     pendingReorderRef.current = {
       pointerId,
       element,
       timeoutId: window.setTimeout(() => {
-        cleanupPendingListeners();
         beginReorder();
       }, LONG_PRESS_REORDER_DELAY_MS),
-      cleanup: cleanupPendingListeners,
+      cleanup: cleanupGestureListeners,
     };
   };
 

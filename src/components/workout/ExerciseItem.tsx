@@ -114,8 +114,14 @@ export function ExerciseItem({
       }`}
     >
       <div
-        className="mb-4 flex cursor-grab touch-none justify-between items-start active:cursor-grabbing"
+        className="mb-4 flex cursor-grab touch-none select-none justify-between items-start active:cursor-grabbing"
         onPointerDown={onReorderPointerDown}
+        onContextMenu={(event) => event.preventDefault()}
+        style={{
+          WebkitTouchCallout: "none",
+          WebkitUserSelect: "none",
+          userSelect: "none",
+        }}
       >
         <h3 className="text-xl font-semibold mr-4">
           {formatWorkoutDisplayName(exercise.name)}
