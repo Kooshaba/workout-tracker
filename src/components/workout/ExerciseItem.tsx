@@ -114,7 +114,7 @@ export function ExerciseItem({
       }`}
     >
       <div
-        className="mb-4 flex cursor-grab touch-pan-y justify-between items-start active:cursor-grabbing"
+        className="mb-4 flex cursor-grab touch-none justify-between items-start active:cursor-grabbing"
         onPointerDown={onReorderPointerDown}
       >
         <h3 className="text-xl font-semibold mr-4">

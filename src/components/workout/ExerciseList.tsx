@@ -18,6 +18,16 @@ type Props = {
   onTimerStart: (exerciseName: string) => void;
 };
 
+type PendingReorder = {
+  pointerId: number;
+  element: HTMLElement;
+  timeoutId: number;
+  cleanup: () => void;
+};
+
+const LONG_PRESS_REORDER_DELAY_MS = 320;
+const LONG_PRESS_MOVE_TOLERANCE_PX = 8;
+
 const reorderItems = <T,>(items: T[], fromIndex: number, toIndex: number) => {
   const nextItems = [...items];
   const [movedItem] = nextItems.splice(fromIndex, 1);
@@ -56,10 +66,27 @@ export function ExerciseList({
   const [dragPointerY, setDragPointerY] = useState<number | null>(null);
   const dragOrderIndexesRef = useRef<number[]>([]);
   const compactRowRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const pendingReorderRef = useRef<PendingReorder | null>(null);
+  const activeReorderRef = useRef<{
+    pointerId: number;
+    element: HTMLElement;
+  } | null>(null);
 
   const supersetIds = getSupersetIds(exercises);
   const exerciseGroups = groupBySuperset(exercises);
   const isReordering = draggingExerciseIndex !== null;
+
+  const clearPendingReorder = () => {
+    const pendingReorder = pendingReorderRef.current;
+    if (!pendingReorder) return;
+
+    window.clearTimeout(pendingReorder.timeoutId);
+    pendingReorder.cleanup();
+    if (pendingReorder.element.hasPointerCapture(pendingReorder.pointerId)) {
+      pendingReorder.element.releasePointerCapture(pendingReorder.pointerId);
+    }
+    pendingReorderRef.current = null;
+  };
 
   useEffect(() => {
     const nextExerciseIds = exercises.map((exercise) => exercise.id);
@@ -101,7 +128,17 @@ export function ExerciseList({
   useEffect(() => {
     if (draggingExerciseIndex === null) return;
 
+    const preventNativeTouchScroll = (event: TouchEvent) => {
+      event.preventDefault();
+    };
+
     const handlePointerMove = (event: PointerEvent) => {
+      if (event.pointerId !== activeReorderRef.current?.pointerId) return;
+
+      if (event.cancelable) {
+        event.preventDefault();
+      }
+
       const pointerY = event.clientY;
       setDragPointerY(pointerY);
 
@@ -135,7 +172,15 @@ export function ExerciseList({
       });
     };
 
-    const handlePointerUp = () => {
+    const handlePointerUp = (event: PointerEvent) => {
+      const activeReorder = activeReorderRef.current;
+      if (!activeReorder || event.pointerId !== activeReorder.pointerId) return;
+
+      if (activeReorder.element.hasPointerCapture(activeReorder.pointerId)) {
+        activeReorder.element.releasePointerCapture(activeReorder.pointerId);
+      }
+      activeReorderRef.current = null;
+
       const orderedExercises = dragOrderIndexesRef.current
         .map((index) => exercises[index])
         .filter((exercise): exercise is WorkoutExercise => Boolean(exercise));
@@ -153,16 +198,33 @@ export function ExerciseList({
       }
     };
 
-    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointermove", handlePointerMove, {
+      passive: false,
+    });
     window.addEventListener("pointerup", handlePointerUp);
     window.addEventListener("pointercancel", handlePointerUp);
+    window.addEventListener("touchmove", preventNativeTouchScroll, {
+      passive: false,
+    });
 
     return () => {
+      const activeReorder = activeReorderRef.current;
+      if (activeReorder?.element.hasPointerCapture(activeReorder.pointerId)) {
+        activeReorder.element.releasePointerCapture(activeReorder.pointerId);
+      }
+      activeReorderRef.current = null;
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
       window.removeEventListener("pointercancel", handlePointerUp);
+      window.removeEventListener("touchmove", preventNativeTouchScroll);
     };
   }, [draggingExerciseIndex, exercises, onUpdate]);
+
+  useEffect(() => {
+    return () => {
+      clearPendingReorder();
+    };
+  }, []);
 
   const getLastCompletedSet = (exerciseName: string): StrengthSet | null => {
     // Find the last workout that had this exercise
@@ -333,11 +395,67 @@ export function ExerciseList({
     if (isInteractiveDragTarget(event.target)) return;
 
     event.preventDefault();
-    const initialOrderIndexes = exercises.map((_, index) => index);
-    setDraggingExerciseIndex(exerciseIndex);
-    setDragPointerY(event.clientY);
-    dragOrderIndexesRef.current = initialOrderIndexes;
-    setDragOrderIndexes(initialOrderIndexes);
+    clearPendingReorder();
+
+    const element = event.currentTarget;
+    const pointerId = event.pointerId;
+    const startX = event.clientX;
+    const startY = event.clientY;
+
+    element.setPointerCapture(pointerId);
+
+    const beginReorder = () => {
+      const pendingReorder = pendingReorderRef.current;
+      if (!pendingReorder || pendingReorder.pointerId !== pointerId) return;
+
+      const initialOrderIndexes = exercises.map((_, index) => index);
+      setDraggingExerciseIndex(exerciseIndex);
+      setDragPointerY(startY);
+      dragOrderIndexesRef.current = initialOrderIndexes;
+      activeReorderRef.current = { pointerId, element };
+      setDragOrderIndexes(initialOrderIndexes);
+      pendingReorderRef.current = null;
+    };
+
+    const handlePendingPointerMove = (pointerEvent: PointerEvent) => {
+      if (pointerEvent.pointerId !== pointerId) return;
+
+      const distance = Math.hypot(
+        pointerEvent.clientX - startX,
+        pointerEvent.clientY - startY
+      );
+
+      if (distance > LONG_PRESS_MOVE_TOLERANCE_PX) {
+        cleanupPendingListeners();
+        clearPendingReorder();
+      }
+    };
+
+    const handlePendingPointerEnd = (pointerEvent: PointerEvent) => {
+      if (pointerEvent.pointerId !== pointerId) return;
+
+      clearPendingReorder();
+    };
+
+    const cleanupPendingListeners = () => {
+      window.removeEventListener("pointermove", handlePendingPointerMove);
+      window.removeEventListener("pointerup", handlePendingPointerEnd);
+      window.removeEventListener("pointercancel", handlePendingPointerEnd);
+    };
+
+    window.addEventListener("pointermove", handlePendingPointerMove);
+    window.addEventListener("pointerup", handlePendingPointerEnd);
+    window.addEventListener("pointercancel", handlePendingPointerEnd);
+
+    pendingReorderRef.current = {
+      pointerId,
+      element,
+      timeoutId: window.setTimeout(() => {
+        cleanupPendingListeners();
+        beginReorder();
+      }, LONG_PRESS_REORDER_DELAY_MS),
+      cleanup: cleanupPendingListeners,
+    };
   };
 
   const registerCompactRow = (exerciseIndex: number) => {
