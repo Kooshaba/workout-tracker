@@ -5,6 +5,7 @@ import { useWorkoutHistory } from "../context/useWorkoutHistory";
 import type { WorkoutExercise } from "../types/workout";
 import { groupBySuperset, getSupersetIds } from "../utils/supersetUtils";
 import type { SupersetColor } from "../utils/supersetUtils";
+import { formatWorkoutDisplayName } from "../utils/exerciseUtils";
 
 export function WorkoutDetails() {
   const { t, dateLocale } = useI18n();
@@ -39,7 +40,7 @@ export function WorkoutDetails() {
           to={`/exercise/${encodeURIComponent(exercise.name)}`}
           className="text-lg font-semibold text-sky-300 transition-colors hover:text-sky-100"
         >
-          {exercise.name}
+          {formatWorkoutDisplayName(exercise.name)}
         </Link>
       </div>
 
@@ -102,7 +103,9 @@ export function WorkoutDetails() {
         >
           ← {t("common.back")}
         </button>
-        <h1 className="text-2xl font-bold">{workout.name}</h1>
+        <h1 className="text-2xl font-bold">
+          {formatWorkoutDisplayName(workout.name)}
+        </h1>
       </div>
 
       <div className="text-gray-500">

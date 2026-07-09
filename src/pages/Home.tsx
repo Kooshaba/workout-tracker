@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Language, useI18n } from "../i18nContext";
 import { AuthStatus } from "../components/AuthStatus";
 import { useWorkoutHistory } from "../context/useWorkoutHistory";
+import { formatWorkoutDisplayName } from "../utils/exerciseUtils";
 
 export function Home() {
   const { language, setLanguage, t, dateLocale } = useI18n();
@@ -88,7 +89,9 @@ export function Home() {
                     to={`/workout/${workout.id}`}
                     className="flex-1 transition-colors hover:text-sky-200"
                   >
-                    <h3 className="font-semibold">{workout.name}</h3>
+                    <h3 className="font-semibold">
+                      {formatWorkoutDisplayName(workout.name)}
+                    </h3>
                     <span className="text-sm text-gray-500">
                       {format(new Date(workout.date), "PP", {
                         locale: dateLocale,
@@ -101,7 +104,9 @@ export function Home() {
                     </div>
                     <div className="text-sm">
                       {workout.exercises
-                        .map((exercise) => exercise.name)
+                        .map((exercise) =>
+                          formatWorkoutDisplayName(exercise.name)
+                        )
                         .join(", ")}
                     </div>
                   </Link>

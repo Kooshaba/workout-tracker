@@ -7,6 +7,7 @@ import {
   CardioSession,
 } from "../types/workout";
 import { useI18n } from "../i18nContext";
+import { formatWorkoutDisplayName } from "../utils/exerciseUtils";
 
 type Recommendation = {
   name: string;
@@ -57,7 +58,11 @@ function workoutSnapshot(workout: Workout | null, t: Translate) {
   if (!workout) return t("coach.noActiveWorkout");
 
   const lines: string[] = [];
-  lines.push(t("coach.snapshotWorkout", { name: workout.name }));
+  lines.push(
+    t("coach.snapshotWorkout", {
+      name: formatWorkoutDisplayName(workout.name),
+    })
+  );
   lines.push(t("coach.snapshotExercises", { count: workout.exercises.length }));
 
   for (const ex of workout.exercises) {
@@ -65,7 +70,7 @@ function workoutSnapshot(workout: Workout | null, t: Translate) {
       const completed = ex.sets.filter((s) => s.completed).length;
       lines.push(
         t("coach.snapshotStrength", {
-          name: ex.name,
+          name: formatWorkoutDisplayName(ex.name),
           sets: ex.sets.length,
           completed,
         })
@@ -73,7 +78,7 @@ function workoutSnapshot(workout: Workout | null, t: Translate) {
     } else {
       lines.push(
         t("coach.snapshotCardio", {
-          name: ex.name,
+          name: formatWorkoutDisplayName(ex.name),
           duration: ex.sets.duration,
           distance: ex.sets.distance,
         })
@@ -343,7 +348,9 @@ export function Coach() {
           <div className="space-y-2">
             {answer.recommendations.map((rec) => (
               <div key={rec.name} className="border rounded-lg p-3">
-                <div className="font-semibold">{rec.name}</div>
+                <div className="font-semibold">
+                  {formatWorkoutDisplayName(rec.name)}
+                </div>
                 <div className="text-sm text-gray-600">{rec.reason}</div>
                 {currentWorkout && (
                   <button

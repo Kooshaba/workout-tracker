@@ -13,6 +13,7 @@ import type { Workout } from "../types/workout";
 import { useI18n } from "../i18nContext";
 import "react-calendar/dist/Calendar.css";
 import { useWorkoutHistory } from "../context/useWorkoutHistory";
+import { formatWorkoutDisplayName } from "../utils/exerciseUtils";
 
 export function CalendarPage() {
   const { language, t, dateLocale } = useI18n();
@@ -184,7 +185,7 @@ export function CalendarPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <h3 className="truncate font-semibold text-slate-50">
-                      {workout.name}
+                      {formatWorkoutDisplayName(workout.name)}
                     </h3>
                     <span className="mt-1 flex items-center gap-1.5 text-sm text-slate-400">
                       <ClockIcon className="h-4 w-4" />
@@ -200,7 +201,9 @@ export function CalendarPage() {
                   </div>
                 </div>
                 <div className="mt-3 line-clamp-2 text-sm text-slate-400">
-                  {workout.exercises.map((exercise) => exercise.name).join(", ")}
+                  {workout.exercises
+                    .map((exercise) => formatWorkoutDisplayName(exercise.name))
+                    .join(", ")}
                 </div>
               </Link>
             ))}

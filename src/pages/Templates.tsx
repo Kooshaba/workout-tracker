@@ -8,6 +8,7 @@ import {
   TEMPLATE_IMPORT_EXAMPLE,
 } from "../lib/templateImport";
 import { groupBySuperset, getSupersetIds } from "../utils/supersetUtils";
+import { formatWorkoutDisplayName } from "../utils/exerciseUtils";
 
 export function Templates() {
   const { t } = useI18n();
@@ -168,7 +169,7 @@ export function Templates() {
                   onClick={() => createTemplateFromWorkout(workout)}
                   className="w-full text-left p-3 border rounded-lg hover:bg-gray-50"
                 >
-                  {workout.name} (
+                  {formatWorkoutDisplayName(workout.name)} (
                   {t("common.exerciseCount", {
                     count: workout.exercises.length,
                   })}
@@ -198,7 +199,9 @@ export function Templates() {
         {templates.map((template) => (
           <div key={template.id} className="border rounded-lg p-4">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold">{template.name}</h3>
+              <h3 className="font-semibold">
+                {formatWorkoutDisplayName(template.name)}
+              </h3>
               <div className="space-x-2">
                 <button
                   onClick={() => setEditingTemplate(template)}
@@ -219,7 +222,7 @@ export function Templates() {
                 if (group.kind === "single") {
                   return (
                     <div key={group.item.id} className="text-sm text-gray-600">
-                      {group.item.name}
+                      {formatWorkoutDisplayName(group.item.name)}
                     </div>
                   );
                 }
@@ -236,7 +239,9 @@ export function Templates() {
                       })}
                     </div>
                     <div className="text-sm text-gray-600">
-                      {group.items.map(({ item }) => item.name).join(" + ")}
+                      {group.items
+                        .map(({ item }) => formatWorkoutDisplayName(item.name))
+                        .join(" + ")}
                     </div>
                   </div>
                 );

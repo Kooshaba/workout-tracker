@@ -7,6 +7,7 @@ import type { SupersetColor } from "../../utils/supersetUtils";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "../../i18nContext";
+import { formatWorkoutDisplayName } from "../../utils/exerciseUtils";
 
 type Props = {
   exercise: WorkoutExercise;
@@ -32,6 +33,7 @@ type Props = {
   showSupersetControl?: boolean;
   animateIn: boolean;
   animatedSetIndex: number | null;
+  onReorderPointerDown?: (event: React.PointerEvent<HTMLElement>) => void;
 };
 
 export function ExerciseItem({
@@ -51,6 +53,7 @@ export function ExerciseItem({
   showSupersetControl = true,
   animateIn,
   animatedSetIndex,
+  onReorderPointerDown,
 }: Props) {
   const { t } = useI18n();
   const lastSetRef = useRef<HTMLInputElement>(null);
@@ -110,8 +113,13 @@ export function ExerciseItem({
           : ""
       }`}
     >
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="text-xl font-semibold mr-4">{exercise.name}</h3>
+      <div
+        className="mb-4 flex cursor-grab touch-pan-y justify-between items-start active:cursor-grabbing"
+        onPointerDown={onReorderPointerDown}
+      >
+        <h3 className="text-xl font-semibold mr-4">
+          {formatWorkoutDisplayName(exercise.name)}
+        </h3>
         <div className="flex items-center">
           <div className="flex gap-2 items-center">
             <Link

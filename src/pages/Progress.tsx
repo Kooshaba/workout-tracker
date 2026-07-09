@@ -14,6 +14,7 @@ import {
 import { Line } from "react-chartjs-2";
 import { useI18n } from "../i18nContext";
 import { useWorkoutHistory } from "../context/useWorkoutHistory";
+import { formatWorkoutDisplayName } from "../utils/exerciseUtils";
 
 ChartJS.register(
   CategoryScale,
@@ -79,7 +80,7 @@ export function Progress() {
     ),
     datasets: [
       {
-        label: selectedExercise,
+        label: formatWorkoutDisplayName(selectedExercise),
         data: exerciseData.map((data) => data!.value),
         borderColor: "rgb(59, 130, 246)",
         backgroundColor: "rgba(59, 130, 246, 0.5)",
@@ -122,7 +123,7 @@ export function Progress() {
             <option value="">{t("progress.selectExercise")}</option>
             {exerciseNames.map((name) => (
               <option key={name} value={name}>
-                {name}
+                {formatWorkoutDisplayName(name)}
               </option>
             ))}
           </select>

@@ -7,13 +7,30 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { ExerciseItem } from "./ExerciseItem";
 import { groupBySuperset, getSupersetIds } from "../../utils/supersetUtils";
+import type { SupersetColor } from "../../utils/supersetUtils";
 import { useI18n } from "../../i18nContext";
+import { formatWorkoutDisplayName } from "../../utils/exerciseUtils";
 
 type Props = {
   exercises: WorkoutExercise[];
   workoutHistory: Workout[];
   onUpdate: (exercises: WorkoutExercise[]) => void;
   onTimerStart: (exerciseName: string) => void;
+};
+
+const reorderItems = <T,>(items: T[], fromIndex: number, toIndex: number) => {
+  const nextItems = [...items];
+  const [movedItem] = nextItems.splice(fromIndex, 1);
+  nextItems.splice(toIndex, 0, movedItem);
+  return nextItems;
+};
+
+const isInteractiveDragTarget = (target: EventTarget | null) => {
+  if (!(target instanceof HTMLElement)) return false;
+
+  return Boolean(
+    target.closest("button, a, input, textarea, select, label, option")
+  );
 };
 
 export function ExerciseList({
@@ -30,9 +47,19 @@ export function ExerciseList({
     exerciseId: string;
     setIndex: number;
   } | null>(null);
+  const [draggingExerciseIndex, setDraggingExerciseIndex] = useState<
+    number | null
+  >(
+    null
+  );
+  const [dragOrderIndexes, setDragOrderIndexes] = useState<number[]>([]);
+  const [dragPointerY, setDragPointerY] = useState<number | null>(null);
+  const dragOrderIndexesRef = useRef<number[]>([]);
+  const compactRowRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   const supersetIds = getSupersetIds(exercises);
   const exerciseGroups = groupBySuperset(exercises);
+  const isReordering = draggingExerciseIndex !== null;
 
   useEffect(() => {
     const nextExerciseIds = exercises.map((exercise) => exercise.id);
@@ -66,6 +93,76 @@ export function ExerciseList({
 
     return () => window.clearTimeout(timeoutId);
   }, [animatedSet]);
+
+  useEffect(() => {
+    dragOrderIndexesRef.current = dragOrderIndexes;
+  }, [dragOrderIndexes]);
+
+  useEffect(() => {
+    if (draggingExerciseIndex === null) return;
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const pointerY = event.clientY;
+      setDragPointerY(pointerY);
+
+      setDragOrderIndexes((currentIndexes) => {
+        const currentIndex = currentIndexes.indexOf(draggingExerciseIndex);
+        if (currentIndex === -1) return currentIndexes;
+
+        const indexesWithoutDragged = currentIndexes.filter(
+          (index) => index !== draggingExerciseIndex
+        );
+        const targetIndex = indexesWithoutDragged.reduce(
+          (index, exerciseIndex) => {
+            const row = compactRowRefs.current.get(exerciseIndex);
+            if (!row) return index;
+
+            const rect = row.getBoundingClientRect();
+            return pointerY > rect.top + rect.height / 2 ? index + 1 : index;
+          },
+          0
+        );
+
+        if (targetIndex === currentIndex) return currentIndexes;
+
+        const nextIndexes = reorderItems(
+          currentIndexes,
+          currentIndex,
+          targetIndex
+        );
+        dragOrderIndexesRef.current = nextIndexes;
+        return nextIndexes;
+      });
+    };
+
+    const handlePointerUp = () => {
+      const orderedExercises = dragOrderIndexesRef.current
+        .map((index) => exercises[index])
+        .filter((exercise): exercise is WorkoutExercise => Boolean(exercise));
+      const orderChanged = dragOrderIndexesRef.current.some(
+        (exerciseIndex, orderIndex) => exerciseIndex !== orderIndex
+      );
+
+      setDraggingExerciseIndex(null);
+      setDragOrderIndexes([]);
+      setDragPointerY(null);
+      compactRowRefs.current.clear();
+
+      if (orderChanged) {
+        onUpdate(orderedExercises);
+      }
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+    };
+  }, [draggingExerciseIndex, exercises, onUpdate]);
 
   const getLastCompletedSet = (exerciseName: string): StrengthSet | null => {
     // Find the last workout that had this exercise
@@ -228,33 +325,110 @@ export function ExerciseList({
   const supersetLabel = (supersetId: string) =>
     t("superset.label", { number: supersetIds.indexOf(supersetId) + 1 });
 
+  const startReorder = (
+    event: React.PointerEvent<HTMLElement>,
+    exerciseIndex: number
+  ) => {
+    if (event.button !== 0 || exercises.length < 2) return;
+    if (isInteractiveDragTarget(event.target)) return;
+
+    event.preventDefault();
+    const initialOrderIndexes = exercises.map((_, index) => index);
+    setDraggingExerciseIndex(exerciseIndex);
+    setDragPointerY(event.clientY);
+    dragOrderIndexesRef.current = initialOrderIndexes;
+    setDragOrderIndexes(initialOrderIndexes);
+  };
+
+  const registerCompactRow = (exerciseIndex: number) => {
+    return (element: HTMLDivElement | null) => {
+      if (element) {
+        compactRowRefs.current.set(exerciseIndex, element);
+      } else {
+        compactRowRefs.current.delete(exerciseIndex);
+      }
+    };
+  };
+
+  const renderExerciseItem = (
+    exercise: WorkoutExercise,
+    exerciseIndex: number,
+    options?: {
+      supersetColor?: SupersetColor;
+      showSupersetControl?: boolean;
+    }
+  ) => (
+    <ExerciseItem
+      key={`${exercise.id}-${exerciseIndex}`}
+      exercise={exercise}
+      exerciseIndex={exerciseIndex}
+      onUpdateStrengthSet={handleUpdateStrengthSet}
+      onUpdateCardioSession={handleUpdateCardioSession}
+      onAddSet={handleAddSet}
+      onRemoveSet={handleRemoveSet}
+      onRemoveExercise={handleRemoveExercise}
+      onTimerStart={onTimerStart}
+      getLastCompletedSet={getLastCompletedSet}
+      onUpdateNotes={handleUpdateExerciseNotes}
+      onUpdateSuperset={handleUpdateSuperset}
+      supersetIds={supersetIds}
+      supersetColor={options?.supersetColor}
+      showSupersetControl={options?.showSupersetControl}
+      animateIn={animatedExerciseIds.includes(exercise.id)}
+      animatedSetIndex={
+        animatedSet?.exerciseId === exercise.id ? animatedSet.setIndex : null
+      }
+      onReorderPointerDown={(event) => startReorder(event, exerciseIndex)}
+    />
+  );
+
+  if (isReordering) {
+    const draggedExercise =
+      draggingExerciseIndex === null ? null : exercises[draggingExerciseIndex];
+
+    return (
+      <div className="relative space-y-2 touch-none select-none">
+        {dragOrderIndexes.map((exerciseIndex) => {
+          const exercise = exercises[exerciseIndex];
+          if (!exercise) return null;
+
+          const isDraggedExercise = exerciseIndex === draggingExerciseIndex;
+
+          return (
+            <div
+              key={`${exercise.id}-${exerciseIndex}`}
+              ref={registerCompactRow(exerciseIndex)}
+              className={`flex min-h-12 items-center rounded-lg border px-4 py-3 text-left text-base font-semibold transition-all duration-150 ${
+                isDraggedExercise
+                  ? "border-sky-500 bg-sky-950/20 text-sky-100 opacity-30"
+                  : "border-slate-700 bg-slate-900/80 text-slate-100"
+              }`}
+            >
+              <span className="truncate">
+                {formatWorkoutDisplayName(exercise.name)}
+              </span>
+            </div>
+          );
+        })}
+        {draggedExercise && dragPointerY !== null && (
+          <div
+            className="pointer-events-none fixed left-4 right-4 z-50 flex min-h-12 -translate-y-1/2 items-center rounded-lg border border-sky-400 bg-sky-950 px-4 py-3 text-left text-base font-semibold text-sky-50 shadow-2xl"
+            style={{ top: dragPointerY }}
+          >
+            <span className="truncate">
+              {formatWorkoutDisplayName(draggedExercise.name)}
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {exerciseGroups.map((group) => {
         if (group.kind === "single") {
-          return (
-            <ExerciseItem
-              key={group.item.id}
-              exercise={group.item}
-              exerciseIndex={group.index}
-              onUpdateStrengthSet={handleUpdateStrengthSet}
-              onUpdateCardioSession={handleUpdateCardioSession}
-              onAddSet={handleAddSet}
-              onRemoveSet={handleRemoveSet}
-              onRemoveExercise={handleRemoveExercise}
-              onTimerStart={onTimerStart}
-              getLastCompletedSet={getLastCompletedSet}
-              onUpdateNotes={handleUpdateExerciseNotes}
-              onUpdateSuperset={handleUpdateSuperset}
-              supersetIds={supersetIds}
-              animateIn={animatedExerciseIds.includes(group.item.id)}
-              animatedSetIndex={
-                animatedSet?.exerciseId === group.item.id
-                  ? animatedSet.setIndex
-                  : null
-              }
-            />
-          );
+          return renderExerciseItem(group.item, group.index);
         }
 
         return (
@@ -279,29 +453,10 @@ export function ExerciseList({
               <option value="new">{t("superset.new")}</option>
             </select>
             {group.items.map(({ item: exercise, index: exerciseIndex }) => (
-              <ExerciseItem
-                key={exercise.id}
-                exercise={exercise}
-                exerciseIndex={exerciseIndex}
-                onUpdateStrengthSet={handleUpdateStrengthSet}
-                onUpdateCardioSession={handleUpdateCardioSession}
-                onAddSet={handleAddSet}
-                onRemoveSet={handleRemoveSet}
-                onRemoveExercise={handleRemoveExercise}
-                onTimerStart={onTimerStart}
-                getLastCompletedSet={getLastCompletedSet}
-                onUpdateNotes={handleUpdateExerciseNotes}
-                onUpdateSuperset={handleUpdateSuperset}
-                supersetIds={supersetIds}
-                supersetColor={group.color}
-                showSupersetControl={false}
-                animateIn={animatedExerciseIds.includes(exercise.id)}
-                animatedSetIndex={
-                  animatedSet?.exerciseId === exercise.id
-                    ? animatedSet.setIndex
-                    : null
-                }
-              />
+              renderExerciseItem(exercise, exerciseIndex, {
+                supersetColor: group.color,
+                showSupersetControl: false,
+              })
             ))}
           </div>
         );

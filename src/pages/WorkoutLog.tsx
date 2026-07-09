@@ -12,6 +12,7 @@ import { ExerciseList } from "../components/workout/ExerciseList";
 import { useI18n } from "../i18nContext";
 import { format } from "date-fns";
 import { useWorkoutHistory } from "../context/useWorkoutHistory";
+import { formatWorkoutDisplayName } from "../utils/exerciseUtils";
 // Rest timer is rendered globally in App
 
 function getLocalDateInputValue(date = new Date()) {
@@ -72,8 +73,8 @@ export function WorkoutLog() {
       id: Date.now().toString(),
       date: workoutDate.toISOString(),
       name: template.name,
-      exercises: template.exercises.map((exercise) => ({
-        id: Date.now().toString(),
+      exercises: template.exercises.map((exercise, index) => ({
+        id: `${Date.now()}-${index}`,
         name: exercise.name,
         exerciseId: exercise.id,
         supersetId: exercise.supersetId,
@@ -161,14 +162,18 @@ export function WorkoutLog() {
                       onClick={() => startFromTemplate(template)}
                       className="w-full text-left p-3 border rounded-lg hover:bg-gray-50"
                     >
-                      <div className="font-medium">{template.name}</div>
+                      <div className="font-medium">
+                        {formatWorkoutDisplayName(template.name)}
+                      </div>
                       <div className="text-sm text-gray-600">
                         {t("common.exerciseCount", {
                           count: template.exercises.length,
                         })}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {template.exercises.map((e) => e.name).join(", ")}
+                        {template.exercises
+                          .map((e) => formatWorkoutDisplayName(e.name))
+                          .join(", ")}
                       </div>
                     </button>
                   ))}
@@ -192,7 +197,9 @@ export function WorkoutLog() {
           }`}
         >
           <div className="flex justify-between items-center">
-            <h1 className="text-xl font-bold">{currentWorkout.name}</h1>
+            <h1 className="text-xl font-bold">
+              {formatWorkoutDisplayName(currentWorkout.name)}
+            </h1>
             <div className="space-x-2">
               <button
                 onClick={cancelWorkout}

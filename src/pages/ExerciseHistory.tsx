@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import type { WorkoutExercise } from "../types/workout";
 import { useI18n } from "../i18nContext";
 import { useWorkoutHistory } from "../context/useWorkoutHistory";
+import { formatWorkoutDisplayName } from "../utils/exerciseUtils";
 
 type ExerciseEntry = {
   date: string;
@@ -53,7 +54,9 @@ export function ExerciseHistory() {
         >
           ← {t("common.back")}
         </button>
-        <h1 className="text-2xl font-bold">{name}</h1>
+        <h1 className="text-2xl font-bold">
+          {formatWorkoutDisplayName(name)}
+        </h1>
       </div>
 
       <div className="space-y-4">
@@ -73,7 +76,7 @@ export function ExerciseHistory() {
                     className="cursor-pointer text-sm text-sky-300 transition-colors hover:text-sky-100"
                     onClick={() => navigate(`/workout/${entry.workoutId}`)}
                   >
-                    {entry.workoutName}
+                    {formatWorkoutDisplayName(entry.workoutName)}
                   </div>
                 </div>
               </div>

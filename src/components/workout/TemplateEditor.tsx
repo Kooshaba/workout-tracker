@@ -2,6 +2,7 @@ import { useState } from "react";
 import { WorkoutTemplate } from "../../types/workout";
 import { useI18n } from "../../i18nContext";
 import { groupBySuperset, getSupersetIds } from "../../utils/supersetUtils";
+import { formatWorkoutDisplayName } from "../../utils/exerciseUtils";
 
 type Props = {
   template: WorkoutTemplate;
@@ -99,7 +100,9 @@ export function TemplateEditor({ template, onSave, onCancel }: Props) {
               <div key={exercise.id} className="space-y-2 p-2 border rounded">
                 <div className="flex justify-between items-start gap-3">
                   <div>
-                    <div className="font-medium">{exercise.name}</div>
+                    <div className="font-medium">
+                      {formatWorkoutDisplayName(exercise.name)}
+                    </div>
                     <div className="text-sm text-gray-500 capitalize">
                       {t(`exerciseType.${exercise.type}`)}
                     </div>
