@@ -216,10 +216,18 @@ export function WorkoutLog() {
             </div>
           </div>
 
-          <div className="space-y-2">
+          <details className="space-y-2">
+            <summary className="cursor-pointer py-2 text-sm font-medium text-slate-400">
+              {t("workout.notes")}
+              {currentWorkout.notes?.trim() && (
+                <span className="ml-2 inline-block max-w-[65%] truncate align-bottom font-normal">
+                  {currentWorkout.notes}
+                </span>
+              )}
+            </summary>
             <label
               htmlFor="workout-notes"
-              className="block text-sm font-medium text-gray-700"
+              className="sr-only"
             >
               {t("workout.notes")}
             </label>
@@ -236,7 +244,7 @@ export function WorkoutLog() {
                 });
               }}
             />
-          </div>
+          </details>
 
           <ExerciseForm
             onAddExercise={(exercise) => {

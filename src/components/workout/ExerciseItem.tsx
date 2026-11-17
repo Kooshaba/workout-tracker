@@ -33,6 +33,7 @@ type Props = {
   showSupersetControl?: boolean;
   animateIn: boolean;
   animatedSetIndex: number | null;
+  variant?: "workout" | "template";
   onReorderPointerDown?: (event: React.PointerEvent<HTMLElement>) => void;
 };
 
@@ -53,8 +54,10 @@ export function ExerciseItem({
   showSupersetControl = true,
   animateIn,
   animatedSetIndex,
+  variant = "workout",
   onReorderPointerDown,
 }: Props) {
+  const isTemplate = variant === "template";
   const { t } = useI18n();
   const lastSetRef = useRef<HTMLInputElement>(null);
   const [isExerciseVisible, setIsExerciseVisible] = useState(!animateIn);
@@ -188,10 +191,14 @@ export function ExerciseItem({
       </div>
 
       {showSupersetControl && (
-        <div className="mb-4 grid gap-2 sm:grid-cols-[auto_1fr] sm:items-center">
+        <details className="mb-2" open={isTemplate || undefined}>
+          <summary className="cursor-pointer py-2 text-sm font-medium text-slate-400">
+            {t("superset.title")}
+            {exercise.supersetId && ` · ${supersetLabel(exercise.supersetId)}`}
+          </summary>
           <label
             htmlFor={`superset-${exercise.id}`}
-            className="text-sm font-medium text-gray-700"
+            className="sr-only"
           >
             {t("superset.title")}
           </label>
@@ -211,7 +218,7 @@ export function ExerciseItem({
             ))}
             <option value="new">{t("superset.new")}</option>
           </select>
-        </div>
+        </details>
       )}
 
       {isStrengthExercise(exercise) && (
@@ -439,10 +446,18 @@ export function ExerciseItem({
       )}
 
       {/* Add notes textarea for the exercise */}
-      <div className="mt-4 pt-4 border-t">
+      <details className="mt-2 border-t" open={isTemplate || undefined}>
+        <summary className="cursor-pointer py-2 text-sm font-medium text-slate-400">
+          {t("exercise.notes")}
+          {exercise.notes?.trim() && (
+            <span className="ml-2 inline-block max-w-[65%] truncate align-bottom font-normal">
+              {exercise.notes}
+            </span>
+          )}
+        </summary>
         <label
           htmlFor={`exercise-notes-${exercise.id}`}
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="sr-only"
         >
           {t("exercise.notes")}
         </label>
@@ -454,7 +469,7 @@ export function ExerciseItem({
           value={exercise.notes || ""}
           onChange={(e) => onUpdateNotes(exerciseIndex, e.target.value)}
         />
-      </div>
+      </details>
     </div>
   );
 }
