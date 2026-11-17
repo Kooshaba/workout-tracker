@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import {
-  askData, coachModels, DEFAULT_COACH_MODEL, workoutSnapshot,
+  askData, coachModels, COACH_CONTEXT_VERSION, DEFAULT_COACH_MODEL, workoutSnapshot,
 } from "../lib/coach";
 import type { CoachTurn, Recommendation } from "../lib/coach";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -84,6 +84,7 @@ function CoachChat({ currentWorkout, setCurrentWorkout }: {
       if (controller.signal.aborted) return;
       setTurns((previous) => [...previous, {
         id: crypto.randomUUID(), question: q, snapshot, response,
+        contextVersion: COACH_CONTEXT_VERSION,
       }]);
       setQuestion("");
     } catch (err) {
