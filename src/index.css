@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Keep scrolling and pinch zoom, without double-tap zoom. Drag handles can
+   still override this with their own touch-action rule. */
+:where(*) {
+  touch-action: manipulation;
+}
+
 .dark-theme {
   background: #0b1020 !important;
   color: #e5e7eb;
