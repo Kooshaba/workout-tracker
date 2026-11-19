@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import {
-  askData, coachModels, COACH_CONTEXT_VERSION, DEFAULT_COACH_MODEL, workoutSnapshot,
+  askData, coachContext, historySnapshot, readLegacyCoachTurns, coachModels, COACH_CONTEXT_VERSION, DEFAULT_COACH_MODEL, workoutSnapshot,
 } from "../lib/coach";
 import type { CoachTurn, Recommendation } from "../lib/coach";
+import { useWorkoutHistory } from "../context/useWorkoutHistory";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import {
   Workout,
@@ -34,7 +35,7 @@ export function Coach() {
     "currentWorkout",
     null
   );
-  return <CoachChat key={currentWorkout?.id ?? "general"}
+  return <CoachChat
     currentWorkout={currentWorkout} setCurrentWorkout={setCurrentWorkout} />;
 }
 
@@ -43,8 +44,12 @@ function CoachChat({ currentWorkout, setCurrentWorkout }: {
   setCurrentWorkout: Dispatch<SetStateAction<Workout | null>>;
 }) {
   const { language, t } = useI18n();
-  const chatKey = `coachChat:${currentWorkout?.id ?? "general"}`;
-  const [turns, setTurns] = useLocalStorage<CoachTurn[]>(chatKey, []);
+  const chatKey = "coachConversation";
+  const legacyTurns = useMemo(() => readLegacyCoachTurns(window.localStorage), []);
+  const [turns, setTurns] = useLocalStorage<CoachTurn[]>(chatKey, legacyTurns);
+  const [profile, setProfile] = useLocalStorage<string>("coachProfile", "");
+  const { workouts, syncStatus } = useWorkoutHistory();
+  const history = useMemo(() => historySnapshot(workouts, t), [workouts, t]);
   const [question, setQuestion] = useLocalStorage<string>(`${chatKey}:draft`, "");
   const request = useRef<AbortController | null>(null);
   const chatEnd = useRef<HTMLDivElement | null>(null);
@@ -67,7 +72,7 @@ function CoachChat({ currentWorkout, setCurrentWorkout }: {
 
   async function askCoach() {
     const q = question.trim();
-    if (!q || request.current) return;
+    if (!q || request.current || syncStatus === "loading") return;
     if (!apiKey.trim()) {
       setError(t("coach.noApiKey"));
       return;
@@ -78,7 +83,7 @@ function CoachChat({ currentWorkout, setCurrentWorkout }: {
     setError(null);
     try {
       const response = await askData({
-        apiKey: apiKey.trim(), model, question: q, snapshot, turns,
+        apiKey: apiKey.trim(), model, question: q, snapshot, turns, history, profile,
         signal: controller.signal, language, t,
       });
       if (controller.signal.aborted) return;
@@ -123,8 +128,22 @@ function CoachChat({ currentWorkout, setCurrentWorkout }: {
       <p className="text-sm text-gray-600">{t("coach.chatHelp")}</p>
       <details className="rounded-lg border p-3 space-y-2">
         <summary className="cursor-pointer text-sm font-semibold">{t("coach.contextTitle")}</summary>
-        <pre className="text-xs whitespace-pre-wrap break-words text-gray-600">{snapshot}</pre>
+        <p className="text-sm">{t("coach.historyCount", { count: workouts.length })}</p>
+        <p className="text-sm text-gray-500">{t("coach.shareHelp")}</p>
+        <pre className="max-h-80 overflow-auto text-sm whitespace-pre-wrap break-words text-gray-600">{coachContext(snapshot, history, profile)}</pre>
       </details>
+
+      <details className="space-y-3 rounded-lg border p-3">
+        <summary className="cursor-pointer text-sm font-semibold">{t("coach.aboutTitle")}</summary>
+        <label htmlFor="coach-profile" className="block text-sm">{t("coach.aboutHelp")}</label>
+        <textarea id="coach-profile" rows={5} value={profile}
+          onChange={(event) => setProfile(event.target.value)} disabled={loading}
+          placeholder={t("coach.aboutPlaceholder")}
+          className="w-full border rounded-lg px-3 py-2" />
+        <p className="text-sm text-gray-500">{t("coach.aboutSaved")}</p>
+      </details>
+      {syncStatus === "loading" && <p role="status" className="text-sm">{t("coach.historyLoading")}</p>}
+      {syncStatus === "error" && <p role="alert" className="text-sm text-amber-600">{t("coach.historyError")}</p>}
 
       <details className="space-y-4 rounded-lg border p-3">
         <summary className="cursor-pointer text-sm font-semibold">{t("coach.connectionTitle")}</summary>
@@ -233,7 +252,7 @@ function CoachChat({ currentWorkout, setCurrentWorkout }: {
         />
         <button
           type="submit"
-          disabled={loading || !question.trim()}
+          disabled={loading || syncStatus === "loading" || !question.trim()}
           className="rounded-xl border border-sky-800 bg-sky-950/60 px-4 py-2 font-semibold text-sky-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sky-900/70 active:translate-y-0.5 disabled:opacity-60"
         >
           {loading ? t("coach.loading") : t("coach.askButton")}

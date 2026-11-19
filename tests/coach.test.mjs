@@ -115,3 +115,55 @@ test('storage updates publish immediately and functional updates preserve the la
     assert.deepEqual(parseStoredValue('broken',[]),[]);
   } finally { unsubscribe(); globalThis.window = originalWindow; }
 });
+
+test('full history includes oldest and newest records without mutating or leaking completion flags', async () => {
+  const { historySnapshot, coachContext } = await import('../src/lib/coach.ts');
+  const history = Array.from({length: 150}, (_, i) => ({...structuredClone(workout),
+    id: String(i), date: `2025-01-01T00:00:00.000Z`, notes: `Record ${i}`}));
+  const before = JSON.stringify(history);
+  const snapshot = historySnapshot(history, t);
+  assert.match(snapshot, /Record 0\b/);
+  assert.match(snapshot, /Record 149\b/);
+  assert.equal(snapshot.match(/coach.snapshotDate/g).length, 150);
+  assert.doesNotMatch(snapshot, /completed/);
+  assert.equal(JSON.stringify(history), before);
+  assert.match(coachContext('No active workout', snapshot, 'I train twice a week'), /I train twice a week/);
+  assert.match(coachContext('None', '', ''), /No saved workouts/);
+});
+
+test('latest full history and personal context are sent once with ongoing dialogue', async () => {
+  const originalFetch = globalThis.fetch;
+  let body;
+  globalThis.fetch = async (_url, options) => {
+    body = JSON.parse(options.body);
+    return Response.json({choices:[{message:{content:JSON.stringify({answer:'Your squat increased.', recommendations:[]})}}]});
+  };
+  try {
+    await askData({apiKey:'test', model:'gpt-4o', question:'How has my squat changed?',
+      snapshot:'No active workout', history:'Historical squat 50, latest squat 80', profile:'Goal: strength; two days weekly',
+      turns:[{id:'old',question:'I prefer mornings',snapshot:'Old workout',contextVersion:COACH_CONTEXT_VERSION,response:{answer:'Understood',recommendations:[]}}],language:'en',t});
+    const request = JSON.stringify(body.messages);
+    assert.equal(request.match(/Historical squat/g).length,1);
+    assert.match(request,/Goal: strength/);
+    assert.match(request,/I prefer mornings/);
+    assert.match(request,/No active workout/);
+    assert.doesNotMatch(request,/not past workout history/);
+    globalThis.fetch = async () => Response.json({error:{code:'context_length_exceeded'}},{status:400});
+    await assert.rejects(askData({apiKey:'test',model:'gpt-4o',question:'Q',snapshot:'S',turns:[],language:'en',t}),/coach.contextTooLarge/);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test('migration preserves prior chats and ignores duplicate or damaged entries', async () => {
+  const { readLegacyCoachTurns } = await import('../src/lib/coach.ts');
+  const turn = {id:'one',question:'My goals',snapshot:'Workout',response:{answer:'Hello',recommendations:[]}};
+  const entries = new Map([
+    ['coachChat:general',JSON.stringify([turn])],
+    ['coachChat:a',JSON.stringify([turn,{...turn,id:'two'}])],
+    ['coachChat:a:draft',JSON.stringify('Draft')],
+    ['coachChat:broken','invalid'],
+    ['coachApiKey','not-a-chat'],
+  ]);
+  const storage = {length:entries.size,key:i=>[...entries.keys()][i],getItem:key=>entries.get(key)};
+  assert.deepEqual(readLegacyCoachTurns(storage).map(turn=>turn.id),['one','two']);
+  assert.equal(entries.size,5);
+});
